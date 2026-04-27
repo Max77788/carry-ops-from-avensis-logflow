@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carry Ops — Load Control for Modern Trucking Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1220;
+  --navy2:#111927;
+  --navy3:#162032;
+  --navy4:#1C2A3F;
+  --navy5:#243147;
+  --orange:#F97316;
+  --orange2:#FB923C;
+  --orange-dim:rgba(249,115,22,0.12);
+  --orange-border:rgba(249,115,22,0.25);
+  --white:#FFFFFF;
+  --off:#F1F5F9;
+  --g1:#E2E8F0;
+  --g2:#94A3B8;
+  --g3:#64748B;
+  --g4:#334155;
+  --green:#10B981;
+  --green-dim:rgba(16,185,129,0.1);
+  --amber:#F59E0B;
+  --red:#EF4444;
+  --font-display:'Playfair Display',serif;
+  --font-body:'DM Sans',sans-serif;
+  --r:8px;--r2:14px;--r3:20px;--r4:28px
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--navy);color:var(--white);font-size:16px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* SVG icon utilities */
+.ico{display:inline-block;vertical-align:middle;flex-shrink:0}
+.ico-orange{stroke:var(--orange)}
+.ico-white{stroke:var(--white)}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:0 5%;height:68px;display:flex;align-items:center;justify-content:space-between;background:rgba(11,18,32,0.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,0.05)}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{width:34px;height:34px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nav-name{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--white)}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-link{font-size:14px;color:var(--g2);text-decoration:none;transition:color .15s}
+.nav-link:hover{color:var(--white)}
+.nav-cta{background:var(--orange);color:var(--white);border:none;border-radius:var(--r);padding:9px 20px;font-size:14px;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .15s;text-decoration:none;display:inline-block}
+.nav-cta:hover{background:var(--orange2);transform:translateY(-1px)}
+.lang-toggle{display:flex;align-items:center;gap:0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:6px;padding:2px;font-size:11px}
+.lang-btn{background:transparent;border:none;color:var(--g3);padding:4px 10px;cursor:pointer;font-family:var(--font-body);font-size:11px;font-weight:500;border-radius:4px;transition:all .15s}
+.lang-btn.active{background:var(--orange);color:var(--white)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 5% 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(249,115,22,0.08) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 80% 60%,rgba(249,115,22,0.04) 0%,transparent 60%);pointer-events:none}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.02) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 20%,transparent 80%)}
+.hero-content{position:relative;z-index:1;max-width:820px}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:100px;padding:6px 16px;font-size:12px;font-weight:500;color:var(--orange);letter-spacing:.06em;text-transform:uppercase;margin-bottom:28px}
+.hero-eyebrow-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-family:var(--font-display);font-size:clamp(40px,6vw,68px);font-weight:400;line-height:1.08;color:var(--white);margin-bottom:24px;letter-spacing:-.5px}
+h1 em{color:var(--orange);font-style:normal}
+h1 .line2{display:block;font-style:italic;color:var(--g2);font-size:.85em}
+.hero-sub{font-size:clamp(16px,2vw,19px);color:var(--g2);max-width:640px;margin:0 auto 40px;line-height:1.7}
+.hero-cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
+.btn-hero{padding:15px 32px;font-size:15px;font-weight:500;border-radius:var(--r);font-family:var(--font-body);cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-hero-primary{background:var(--orange);color:var(--white)}
+.btn-hero-primary:hover{background:var(--orange2);transform:translateY(-2px);box-shadow:0 12px 32px rgba(249,115,22,0.3)}
+.btn-hero-ghost{background:rgba(255,255,255,0.06);color:var(--g1);border:1px solid rgba(255,255,255,0.12)}
+.btn-hero-ghost:hover{background:rgba(255,255,255,0.1);transform:translateY(-1px)}
+.hero-proof{display:flex;gap:0;justify-content:center;flex-wrap:wrap;border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);background:rgba(255,255,255,0.03);overflow:hidden;max-width:780px;margin:0 auto}
+.proof-item{flex:1;min-width:140px;padding:18px 24px;text-align:center;border-right:1px solid rgba(255,255,255,0.07)}
+.proof-item:last-child{border-right:none}
+.proof-num{font-family:var(--font-display);font-size:28px;color:var(--white);font-weight:400;line-height:1}
+.proof-num span{color:var(--orange)}
+.proof-label{font-size:11px;color:var(--g3);margin-top:4px;line-height:1.4}
+
+/* ── SECTIONS ── */
+.section{padding:96px 5%}
+.section-inner{max-width:1100px;margin:0 auto}
+.section-eyebrow{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:12px}
+.section-title{font-family:var(--font-display);font-size:clamp(30px,4vw,46px);font-weight:400;color:var(--white);line-height:1.15;margin-bottom:16px}
+.section-sub{font-size:16px;color:var(--g2);max-width:620px;line-height:1.7;margin-bottom:48px}
+
+/* ── PROBLEM ── */
+.problem-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.problem-card{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r2);padding:24px;position:relative;overflow:hidden;transition:border-color .2s}
+.problem-card:hover{border-color:rgba(249,115,22,0.25)}
+.problem-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),transparent)}
+.problem-icon{width:32px;height:32px;border-radius:8px;background:var(--orange-dim);border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.problem-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:8px}
+.problem-desc{font-size:13px;color:var(--g2);line-height:1.7}
+.problem-cost{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:12px;font-weight:500;color:var(--red);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);border-radius:100px;padding:3px 10px}
+
+/* ── BID BOARD FEATURE ── */
+.bidboard-section{background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%);padding:96px 5%;position:relative;overflow:hidden}
+.bidboard-section::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(249,115,22,0.08) 0%,transparent 70%);pointer-events:none}
+.bidboard-inner{max-width:1100px;margin:0 auto;position:relative;z-index:1}
+.bidboard-header{text-align:center;margin-bottom:56px}
+.bidboard-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:100px;padding:6px 16px;font-size:11px;font-weight:500;color:var(--orange);letter-spacing:.08em;text-transform:uppercase;margin-bottom:20px}
+.bidboard-title{font-family:var(--font-display);font-size:clamp(32px,4.5vw,52px);font-weight:400;color:var(--white);line-height:1.1;margin-bottom:18px}
+.bidboard-title em{font-style:italic;color:var(--orange)}
+.bidboard-sub{font-size:17px;color:var(--g2);max-width:680px;margin:0 auto;line-height:1.7}
+.bidboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.bidboard-criteria{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:32px}
+.crit-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);padding:18px}
+.crit-icon{width:32px;height:32px;border-radius:8px;background:var(--orange-dim);border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.crit-name{font-size:14px;font-weight:500;color:var(--white);margin-bottom:4px}
+.crit-desc{font-size:12px;color:var(--g2);line-height:1.5}
+.bidboard-modes{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.mode-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:100px;padding:6px 14px;font-size:12px;color:var(--green);font-weight:500}
+.mode-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+/* Bid board mockup */
+.bidboard-mock{background:var(--navy3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r3);overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.4)}
+.bidmock-bar{background:rgba(0,0,0,0.3);height:36px;display:flex;align-items:center;padding:0 16px;gap:6px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.bidmock-dot{width:9px;height:9px;border-radius:50%}
+.bidmock-title{font-size:11px;color:var(--g3);margin-left:8px;font-weight:500}
+.bidmock-body{padding:20px}
+.bidmock-load-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.bidmock-load-title{font-size:14px;font-weight:500;color:var(--white);margin-bottom:4px}
+.bidmock-load-meta{font-size:11px;color:var(--g3)}
+.bidmock-status{display:inline-flex;align-items:center;gap:5px;background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:100px;padding:3px 10px;font-size:10px;color:var(--orange);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.bidmock-status .dot{width:5px;height:5px;border-radius:50%;background:var(--orange);animation:blink 2s infinite}
+.bidmock-spec{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin-bottom:16px;padding:12px;background:rgba(255,255,255,0.02);border-radius:8px}
+.bidmock-spec-row{display:flex;justify-content:space-between;font-size:11px}
+.bidmock-spec-label{color:var(--g3)}
+.bidmock-spec-val{color:var(--white);font-weight:500}
+.bidmock-bids-label{font-size:10px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.bid-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:8px;margin-bottom:7px;transition:all .2s}
+.bid-row.winner{border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.06)}
+.bid-carrier{display:flex;flex-direction:column}
+.bid-name{font-size:12px;color:var(--white);font-weight:500;display:flex;align-items:center;gap:6px}
+.bid-stars{font-size:9px;color:var(--g3);margin-top:2px}
+.bid-stars .gold{color:var(--orange)}
+.bid-amount{font-size:13px;color:var(--white);font-weight:500;font-family:var(--font-display)}
+.bid-amount.winner-amt{color:var(--green)}
+.bid-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;color:var(--green);background:rgba(16,185,129,0.12);padding:2px 7px;border-radius:100px;margin-left:6px}
+
+/* ── HOW IT WORKS ── */
+.how-wrap{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+.how-steps{display:flex;flex-direction:column;gap:0}
+.how-step{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:all .15s}
+.how-step:last-child{border-bottom:none}
+.how-step.active .how-step-num{background:var(--orange);color:var(--white)}
+.how-step.active .how-step-title{color:var(--white)}
+.how-step:not(.active){opacity:.5}
+.how-step:not(.active):hover{opacity:.8}
+.how-step-num{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);color:var(--g2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;transition:all .2s;font-family:var(--font-display)}
+.how-step-body{flex:1}
+.how-step-title{font-size:16px;font-weight:500;color:var(--g1);margin-bottom:6px;transition:color .15s;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.how-step-desc{font-size:13px;color:var(--g2);line-height:1.7}
+.optional-pill{font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);border-radius:100px;padding:2px 7px}
+.how-visual{position:sticky;top:100px}
+.how-screen{background:var(--navy3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r2);overflow:hidden;box-shadow:0 16px 48px rgba(0,0,0,0.3)}
+.how-screen-bar{background:rgba(0,0,0,0.3);height:36px;display:flex;align-items:center;padding:0 16px;gap:6px}
+.how-screen-dot{width:9px;height:9px;border-radius:50%}
+.how-screen-title{font-size:11px;color:var(--g3);margin-left:8px;font-weight:500}
+.how-screen-body{padding:20px;min-height:300px}
+.screen-panel{display:none}
+.screen-panel.active{display:block;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.mini-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px}
+.mini-row:last-child{border-bottom:none}
+.mini-label{color:var(--g2)}
+.mini-val{color:var(--white);font-weight:500}
+.mini-val.green{color:var(--green)}
+.mini-val.orange{color:var(--orange)}
+.mini-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:500}
+.mini-badge.green{background:rgba(16,185,129,0.12);color:var(--green)}
+.mini-badge.amber{background:rgba(245,158,11,0.12);color:var(--amber)}
+.mini-badge.red{background:rgba(239,68,68,0.12);color:var(--red)}
+
+/* ── FEATURES (Modules) ── */
+.features-section{background:var(--navy2);padding:96px 5%}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+.feat-card{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r2);padding:26px;transition:all .2s;position:relative}
+.feat-card:hover{border-color:rgba(249,115,22,0.2);transform:translateY(-2px)}
+.feat-card.coming-soon{opacity:.78}
+.feat-icon-wrap{width:44px;height:44px;background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:var(--r);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.feat-title{font-size:16px;font-weight:500;color:var(--white);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.feat-desc{font-size:13px;color:var(--g2);line-height:1.7}
+.feat-tag{display:inline-flex;align-items:center;gap:4px;margin-top:12px;font-size:11px;color:var(--orange);background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:100px;padding:2px 8px}
+.feat-status-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;padding:2px 8px;border-radius:100px;letter-spacing:.06em;text-transform:uppercase}
+.feat-status-pill.live{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25)}
+.feat-status-pill.live .dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+.feat-status-pill.soon{background:rgba(148,163,184,0.1);color:var(--g2);border:1px solid rgba(148,163,184,0.2)}
+.feat-status-pill.req{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.25)}
+
+/* ── ROLES ── */
+.roles-tabs{display:flex;gap:8px;margin-bottom:32px;flex-wrap:wrap}
+.role-tab{padding:8px 18px;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid rgba(255,255,255,0.1);color:var(--g2);background:transparent;font-family:var(--font-body);transition:all .15s}
+.role-tab.active{background:var(--orange);color:var(--white);border-color:var(--orange)}
+.role-tab:hover:not(.active){border-color:rgba(255,255,255,0.2);color:var(--white)}
+.role-panel{display:none;animation:fadeUp .25s ease}
+.role-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.role-gets{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r2);padding:24px}
+.role-gets-title{font-size:12px;font-weight:500;color:var(--g3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.role-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14px;color:var(--g2);line-height:1.5;align-items:flex-start}
+.role-item:last-child{border-bottom:none}
+.role-check{color:var(--orange);flex-shrink:0;margin-top:2px;font-size:13px}
+.role-no-more{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r2);padding:24px}
+.no-more-item{display:flex;gap:10px;padding:7px 0;font-size:13px;color:var(--g3);align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.04)}
+.no-more-item:last-child{border-bottom:none}
+.no-more-x{color:var(--red);flex-shrink:0;font-size:12px;margin-top:2px}
+
+/* ── COMPARISON ── */
+.compare-section{background:var(--navy2);padding:96px 5%}
+.compare-table-wrap{background:var(--navy3);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);overflow:hidden;margin-top:48px;overflow-x:auto}
+.compare-table{width:100%;border-collapse:collapse;min-width:680px}
+.compare-table thead th{padding:14px 20px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;text-align:center;border-bottom:1px solid rgba(255,255,255,0.07);color:var(--g3)}
+.compare-table thead th:first-child{text-align:left;color:var(--g2)}
+.compare-table thead th.co-col{color:var(--orange)}
+.compare-table tbody td{padding:13px 20px;font-size:14px;color:var(--g2);border-bottom:1px solid rgba(255,255,255,0.04);text-align:center;vertical-align:middle}
+.compare-table tbody tr:last-child td{border-bottom:none}
+.compare-table tbody td:first-child{text-align:left}
+.compare-table tbody tr:hover td{background:rgba(255,255,255,0.02)}
+.co-win{color:var(--green);font-size:16px}
+.pc-lose{color:var(--red);font-size:16px}
+.pc-neutral{color:var(--g3);font-size:14px}
+.cat-divider td{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--orange);padding-top:18px !important;background:transparent !important}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+.price-card{background:var(--navy3);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);padding:28px;transition:border-color .2s;position:relative;display:flex;flex-direction:column}
+.price-card:hover{border-color:rgba(255,255,255,0.15)}
+.price-card.featured{border-color:var(--orange);background:rgba(249,115,22,0.05)}
+.price-ribbon{background:var(--orange);color:var(--white);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 12px;border-radius:100px;display:inline-block;margin-bottom:12px}
+.price-tier{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--g3);margin-bottom:6px}
+.price-name{font-family:var(--font-display);font-size:22px;color:var(--white);font-weight:400;margin-bottom:4px}
+.price-desc{font-size:13px;color:var(--g2);line-height:1.6;margin-bottom:16px;min-height:56px}
+.price-feat-group{font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--g3);margin:14px 0 8px}
+.price-feat{font-size:13px;color:var(--g2);padding:5px 0;display:flex;gap:8px;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.04)}
+.price-feat:last-of-type{border-bottom:none}
+.price-feat::before{content:'✓';color:var(--orange);font-weight:600;flex-shrink:0;font-size:12px;margin-top:2px}
+.price-cta{width:100%;margin-top:auto;padding:13px;background:var(--orange);color:var(--white);border:none;border-radius:var(--r);font-size:14px;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .15s}
+.price-cta:hover{background:var(--orange2)}
+.price-cta.ghost{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--g1)}
+.price-cta.ghost:hover{background:rgba(255,255,255,0.1)}
+.pricing-callout{background:rgba(249,115,22,0.06);border:1px solid var(--orange-border);border-radius:var(--r);padding:14px 18px;margin-top:24px;font-size:13px;color:var(--g2);line-height:1.6}
+.pricing-callout strong{color:var(--orange)}
+.addons-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+.addon-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r);padding:14px;text-align:left}
+.addon-icon{width:28px;height:28px;border-radius:6px;background:var(--orange-dim);border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.addon-name{font-size:13px;color:var(--white);font-weight:500;margin-bottom:3px}
+.addon-desc{font-size:11px;color:var(--g3);line-height:1.4}
+
+/* Invoice mockup */
+.invoice-wrap{display:grid;grid-template-columns:1.1fr 0.9fr;gap:32px;align-items:start;margin-top:48px}
+.invoice{background:var(--navy3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r2);overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,0.4);position:relative}
+.invoice-bar{background:rgba(0,0,0,0.3);height:36px;display:flex;align-items:center;padding:0 16px;gap:6px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.invoice-dot{width:9px;height:9px;border-radius:50%}
+.invoice-title{font-size:11px;color:var(--g3);margin-left:8px;font-weight:500}
+.invoice-body{padding:28px 30px}
+.invoice-head{padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:18px}
+.invoice-head-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.invoice-co{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--white)}
+.invoice-meta{font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+.invoice-row{display:grid;grid-template-columns:auto 1fr auto;gap:16px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);align-items:start}
+.invoice-row:last-child{border-bottom:none}
+.invoice-row-icon{width:34px;height:34px;border-radius:8px;background:var(--orange-dim);border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.invoice-row-name{font-size:14px;font-weight:500;color:var(--white);margin-bottom:3px}
+.invoice-row-detail{font-size:12px;color:var(--g2);line-height:1.55}
+.invoice-row-amount{font-family:var(--font-display);font-size:18px;font-weight:400;color:var(--white);text-align:right;white-space:nowrap}
+.invoice-row-amount .qty{display:block;font-size:10px;color:var(--g3);font-family:var(--font-body);font-weight:400;margin-top:2px;text-transform:uppercase;letter-spacing:.05em}
+.invoice-total{display:grid;grid-template-columns:1fr auto;gap:16px;padding:18px 0 4px;border-top:2px solid var(--orange);margin-top:8px;align-items:baseline}
+.invoice-total-label{font-family:var(--font-display);font-size:18px;font-weight:600;color:var(--white)}
+.invoice-total-amount{font-family:var(--font-display);font-size:28px;font-weight:600;color:var(--orange);text-align:right}
+.invoice-total-sub{grid-column:1/-1;font-size:11px;color:var(--g3);margin-top:6px}
+.invoice-foot{padding-top:18px;margin-top:18px;border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.invoice-foot small{font-size:11px;color:var(--g3)}
+.invoice-cta-row{display:flex;gap:10px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+.invoice-explainer{display:flex;flex-direction:column;gap:14px}
+.invoice-exp-card{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r);padding:18px 20px}
+.invoice-exp-num{font-family:var(--font-display);font-size:14px;font-weight:600;color:var(--orange);margin-bottom:4px;letter-spacing:.05em}
+.invoice-exp-name{font-size:15px;font-weight:600;color:var(--white);margin-bottom:6px}
+.invoice-exp-desc{font-size:13px;color:var(--g2);line-height:1.6}
+
+/* Enterprise callout */
+.enterprise-card{background:linear-gradient(135deg,var(--navy3) 0%,rgba(249,115,22,0.04) 100%);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r2);padding:24px 28px;margin-top:32px;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.enterprise-card-text{flex:1;min-width:280px}
+.enterprise-card-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:6px}
+.enterprise-card-title{font-family:var(--font-display);font-size:22px;font-weight:400;color:var(--white);line-height:1.2;margin-bottom:6px}
+.enterprise-card-desc{font-size:13px;color:var(--g2);line-height:1.6;max-width:560px}
+
+@media (max-width:900px){
+  .invoice-wrap{grid-template-columns:1fr}
+  .invoice-body{padding:20px}
+  .invoice-row-amount{font-size:15px}
+  .invoice-total-amount{font-size:22px}
+  .enterprise-card{flex-direction:column;align-items:flex-start}
+}
+
+/* ── DEMO GATE ── */
+.gate-section{padding:96px 5%;background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%)}
+.gate-wrap{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.gate-left .section-title{font-size:clamp(28px,3.5vw,40px);margin-bottom:16px}
+.gate-left p{font-size:15px;color:var(--g2);line-height:1.7;margin-bottom:24px}
+.gate-form-wrap{background:var(--navy3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r3);padding:32px}
+.gate-form-title{font-family:var(--font-display);font-size:24px;color:var(--white);font-weight:400;margin-bottom:6px}
+.gate-form-sub{font-size:13px;color:var(--g2);margin-bottom:24px;line-height:1.6}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:500;color:var(--g2);margin-bottom:6px;letter-spacing:.03em}
+.form-input,.form-select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:11px 14px;font-size:14px;color:var(--white);font-family:var(--font-body);outline:none;transition:border-color .15s}
+.form-input:focus,.form-select:focus{border-color:var(--orange)}
+.form-input::placeholder{color:var(--g3)}
+.form-select{appearance:none;cursor:pointer}
+.form-select option{background:var(--navy3);color:var(--white)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-submit{width:100%;padding:14px;background:var(--orange);color:var(--white);border:none;border-radius:var(--r);font-size:15px;font-weight:500;font-family:var(--font-body);cursor:pointer;transition:all .2s;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.form-submit:hover{background:var(--orange2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(249,115,22,0.3)}
+.form-privacy{font-size:11px;color:var(--g3);text-align:center;margin-top:10px;line-height:1.5}
+.form-success{display:none;text-align:center;padding:20px 0}
+.form-success-icon{margin-bottom:12px;display:flex;justify-content:center}
+.form-success-title{font-family:var(--font-display);font-size:22px;color:var(--white);margin-bottom:8px;font-weight:400}
+.form-success-sub{font-size:14px;color:var(--g2);margin-bottom:20px;line-height:1.6}
+.what-to-expect{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.expect-item{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--g2);line-height:1.5}
+.expect-check{color:var(--orange);flex-shrink:0;font-weight:600}
+
+/* ── FAQ ── */
+.faq-section{padding:96px 5%;background:var(--navy)}
+.faq-list{margin-top:40px;max-width:820px}
+.faq-item{border-bottom:1px solid rgba(255,255,255,0.06);padding:20px 0;cursor:pointer}
+.faq-q{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:500;color:var(--white);gap:14px}
+.faq-toggle{color:var(--orange);font-size:18px;transition:transform .2s;flex-shrink:0}
+.faq-item.open .faq-toggle{transform:rotate(45deg)}
+.faq-a{font-size:14px;color:var(--g2);line-height:1.7;margin-top:0;max-height:0;overflow:hidden;transition:max-height .25s ease,margin-top .25s ease}
+.faq-item.open .faq-a{margin-top:14px;max-height:300px}
+
+/* ── POWERED BY BAR ── */
+.powered-bar{display:flex;align-items:center;justify-content:center;gap:8px;padding:18px 5%;background:var(--navy2);border-top:1px solid rgba(255,255,255,0.05);font-size:12px;color:var(--g3);flex-wrap:wrap}
+.powered-text{color:var(--g3)}
+.powered-brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.powered-logo{width:24px;height:24px;background:var(--orange);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--white)}
+.powered-name{color:var(--white);font-weight:500;font-size:13px}
+.powered-name span{color:var(--orange)}
+
+/* ── FOOTER ── */
+footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255,255,255,0.05)}
+.footer-inner{max-width:1100px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.footer-logo{width:32px;height:32px;background:var(--orange);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.footer-brand-name{font-family:var(--font-display);font-size:18px;color:var(--white);font-weight:600}
+.footer-brand-desc{font-size:13px;color:var(--g2);line-height:1.7;max-width:300px}
+.footer-links-title{font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--g3);margin-bottom:14px}
+.footer-link{display:block;font-size:13px;color:var(--g2);text-decoration:none;margin-bottom:8px;transition:color .15s}
+.footer-link:hover{color:var(--orange)}
+.footer-bottom{padding-top:24px;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.footer-copy,.footer-powered{font-size:12px;color:var(--g3)}
+.footer-powered a{color:var(--orange);text-decoration:none}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--navy3);border:1px solid var(--orange-border);border-radius:var(--r);padding:12px 20px;font-size:13px;color:var(--white);display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,0.4);z-index:300;transition:transform .3s ease;opacity:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+
+/* ── RESPONSIVE ── */
+@media (max-width:900px){
+  .nav-links{gap:14px}
+  .nav-link{display:none}
+  .problem-grid,.features-grid,.pricing-grid,.addons-grid{grid-template-columns:1fr}
+  .how-wrap,.role-panel.active,.bidboard-grid,.gate-wrap,.footer-top{grid-template-columns:1fr;gap:32px}
+  .how-visual{position:static}
+  .bidboard-criteria{grid-template-columns:1fr}
+  .footer-top{gap:32px}
+  .hero-proof{flex-direction:column}
+  .proof-item{border-right:none;border-bottom:1px solid rgba(255,255,255,0.07)}
+  .proof-item:last-child{border-bottom:none}
+  .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ─────── REUSABLE SVG ICON LIBRARY ─────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Truck (front 3/4 view) -->
+    <symbol id="i-truck" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17V7a1 1 0 0 1 1-1h11v11"/><path d="M14 9h4l3 4v4h-7"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/></g></symbol>
+    <!-- Clipboard with check (compliance / inspection) -->
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 12.5l2 2 4-4"/></g></symbol>
+    <!-- Shield / safety -->
+    <symbol id="i-shield" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v7c0 4.5 3.2 8.5 8 10 4.8-1.5 8-5.5 8-10V5l-8-3z"/><path d="M9 12l2 2 4-4"/></g></symbol>
+    <!-- Auction gavel (bidding) -->
+    <symbol id="i-gavel" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6"/><path d="M11 7l6 6"/><path d="M9 9l6 6-3 3-6-6z"/><path d="M5 21h10"/></g></symbol>
+    <!-- Person / driver -->
+    <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></g></symbol>
+    <!-- Building / company -->
+    <symbol id="i-building" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2M9 16h2M13 16h2"/></g></symbol>
+    <!-- Mobile phone -->
+    <symbol id="i-phone" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></g></symbol>
+    <!-- Microphone (AI voice) -->
+    <symbol id="i-mic" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></g></symbol>
+    <!-- Dollar / cash -->
+    <symbol id="i-dollar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M16 7H10a2.5 2.5 0 0 0 0 5h4a2.5 2.5 0 0 1 0 5H8"/></g></symbol>
+    <!-- Bar chart / analytics -->
+    <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10M10 21V4M16 21v-7M4 21h18"/></g></symbol>
+    <!-- Star -->
+    <symbol id="i-star" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.5 6 .9-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.3-4.3 6-.9z"/></g></symbol>
+    <!-- Wrench / maintenance -->
+    <symbol id="i-wrench" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7a4 4 0 0 1-5.5 3.7L4 15l3 3 4.3-4.5A4 4 0 0 1 17 8.5L14.5 6 14 7z"/></g></symbol>
+    <!-- Trend up / forecasting -->
+    <symbol id="i-trend" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></g></symbol>
+    <!-- Target / custom -->
+    <symbol id="i-target" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></g></symbol>
+    <!-- Document / paper / ticket -->
+    <symbol id="i-doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></g></symbol>
+    <!-- Eye-off / privacy -->
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></g></symbol>
+    <!-- Cloud / fog (visibility) -->
+    <symbol id="i-cloud" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-1-7.9 6 6 0 0 1 11.7 1.5A4 4 0 0 1 17 18z"/></g></symbol>
+    <!-- Crosshair / aim -->
+    <symbol id="i-crosshair" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/></g></symbol>
+    <!-- Receipt / billing -->
+    <symbol id="i-receipt" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18l2-1.5L10 21l2-1.5L14 21l2-1.5L18 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/></g></symbol>
+    <!-- Check circle -->
+    <symbol id="i-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></g></symbol>
+    <!-- Logo: stacked road lines -->
+    <symbol id="i-logo" viewBox="0 0 24 24"><g fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M5 7h14M5 12h10M5 17h6"/></g></symbol>
+  </defs>
+</svg>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">
+    <div class="nav-logo"><svg class="ico" width="18" height="18"><use href="#i-logo"/></svg></div>
+    <div>
+      <div class="nav-name">Carry Ops</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="#how" class="nav-link">How It Works</a>
+    <a href="#bidboard" class="nav-link">Bid Board</a>
+    <a href="#modules" class="nav-link">Modules</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+    <div class="lang-toggle">
+      <button class="lang-btn active">EN</button>
+      <button class="lang-btn">ES</button>
+    </div>
+    <a href="#demo" class="nav-cta">Schedule Demo</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-dot"></div>
+      For Shippers & Brokers · English / Español
+    </div>
+    <h1>Load Control for<br><em>Modern Trucking</em> Operations<span class="line2">From the load you post to the invoice you send.</span></h1>
+    <p class="hero-sub">Less paper. More loads. Faster pay. One platform that brings your carriers, drivers, tickets, compliance, and billing into a single system you actually trust.</p>
+    <div class="hero-cta-row">
+      <button class="btn-hero btn-hero-primary" onclick="scrollToDemo()">Book a 15-Minute Call →</button>
+      <button class="btn-hero btn-hero-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See How It Works</button>
+    </div>
+    <div class="hero-proof">
+      <div class="proof-item">
+        <div class="proof-num"><span>70-80%</span></div>
+        <div class="proof-label">Less admin work after going digital (industry benchmark)</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-num"><span>&lt;60</span></div>
+        <div class="proof-label">Days from kickoff to live, paperless operations</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-num"><span>83%</span></div>
+        <div class="proof-label">Of business clients now expect digital invoice verification</div>
+      </div>
+      <div class="proof-item">
+        <div class="proof-num"><span>EN/ES</span></div>
+        <div class="proof-label">Bilingual driver workflow and AI receptionist built in</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="section" id="problem">
+  <div class="section-inner">
+    <div class="section-eyebrow">The Real Problem</div>
+    <h2 class="section-title">You don't lose money on hauling.<br>You lose it on the friction around it.</h2>
+    <p class="section-sub">Most operations aren't broken because there's no demand. They're broken because tickets get lost, the wrong carriers get the load, and nobody knows where the truck is until something goes wrong.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="problem-icon"><svg class="ico ico-orange" width="18" height="18"><use href="#i-doc"/></svg></div>
+        <div class="problem-title">Paper tickets, slow pay</div>
+        <div class="problem-desc">Lost tickets. Illegible scale slips. Disputes weeks after delivery. Your team is chasing paperwork that should have been digital before the truck left the yard.</div>
+        <div class="problem-cost">↑ Cash sitting unbilled</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon"><svg class="ico ico-orange" width="18" height="18"><use href="#i-crosshair"/></svg></div>
+        <div class="problem-title">Carrier roulette</div>
+        <div class="problem-desc">Public load boards turn every load into a price war. Spreadsheets of "carriers I trust" go stale. There's no fast way to know who can actually run this lane — safely, on time, at a fair rate.</div>
+        <div class="problem-cost">↑ Risk you can't see</div>
+      </div>
+      <div class="problem-card">
+        <div class="problem-icon"><svg class="ico ico-orange" width="18" height="18"><use href="#i-cloud"/></svg></div>
+        <div class="problem-title">Trucks leave, visibility ends</div>
+        <div class="problem-desc">Once dispatched, the truck disappears. Driver hiring lives in inboxes. Inspections live on paper. Every new load adds more admin instead of less.</div>
+        <div class="problem-cost">↑ Can't scale</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how" style="background:var(--navy2)">
+  <div class="section-inner">
+    <div class="section-eyebrow">How It Works</div>
+    <h2 class="section-title">From the carrier you trust<br>to the invoice you send.</h2>
+    <p class="section-sub">Every step is connected. No re-keying. No phone tag. No scrambling at month-end. The platform is built around trust — carriers can't get on it without proving they belong.</p>
+    <div class="how-wrap">
+      <div class="how-steps">
+        <div class="how-step active" onclick="setHowStep(0)">
+          <div class="how-step-num">1</div>
+          <div class="how-step-body">
+            <div class="how-step-title">Carriers join with built-in verification</div>
+            <div class="how-step-desc">Carriers go through digital onboarding — insurance, W-9, fleet list, drivers, safety record. The platform checks each item as it comes in. Expired insurance, missing docs, or failed basics? They don't get on. Period. By the time a carrier shows up in your bid invitations, they've already cleared the bar.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setHowStep(1)">
+          <div class="how-step-num">2</div>
+          <div class="how-step-body">
+            <div class="how-step-title">Drivers cleared and ready <span class="optional-pill">Optional</span></div>
+            <div class="how-step-desc">If you hire your own drivers, this step is yours. Run candidates through application, document collection, MVR, drug test, orientation, and training — all in one place, in English or Spanish. If your carriers bring their own drivers, skip it. Either way, the loads only roll with cleared drivers.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setHowStep(2)">
+          <div class="how-step-num">3</div>
+          <div class="how-step-body">
+            <div class="how-step-title">You post the load. The right carriers get invited.</div>
+            <div class="how-step-desc">Post your load — equipment, lane, tonnage, timeline. The platform automatically finds which verified carriers can actually run it and invites only them. No public board. No race to the bottom. Pick Open Bid mode, or pre-set the rate you're willing to pay.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setHowStep(3)">
+          <div class="how-step-num">4</div>
+          <div class="how-step-body">
+            <div class="how-step-title">Bids come in private. You award on the full picture.</div>
+            <div class="how-step-desc">Carriers submit their bid, or accept your set rate. They never see what the others bid. You see every offer alongside the carrier's safety score, on-time history, dispute count, and consistency rating. Award the load to the right combination — not just the cheapest number.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setHowStep(4)">
+          <div class="how-step-num">5</div>
+          <div class="how-step-body">
+            <div class="how-step-title">Pre-trip clears, then the truck rolls</div>
+            <div class="how-step-desc">Driver runs the pre-trip inspection on their phone. Photo capture, defect logging, voice notes — under two minutes. A critical fail locks dispatch automatically. Once cleared, the driver scans QR tickets at pickup, captures GPS and signatures at delivery. Everything timestamped, in English or Spanish.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setHowStep(5)">
+          <div class="how-step-num">6</div>
+          <div class="how-step-body">
+            <div class="how-step-title">Invoice generates itself. Records file themselves.</div>
+            <div class="how-step-desc">PDF tickets bundle into a billing package. Documents auto-archive for compliance. Optional bank tie-in moves cash faster. The cycle closes without anyone re-keying a single field.</div>
+          </div>
+        </div>
+      </div>
+      <div class="how-visual">
+        <div class="how-screen">
+          <div class="how-screen-bar">
+            <div class="how-screen-dot" style="background:#FF5F57"></div>
+            <div class="how-screen-dot" style="background:#FEBC2E"></div>
+            <div class="how-screen-dot" style="background:#28C840"></div>
+            <div class="how-screen-title" id="how-screen-title">Carrier Verification</div>
+          </div>
+          <div class="how-screen-body">
+
+            <div class="screen-panel active" id="sp-0">
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Onboarding · Lone Star Hauling LLC</div>
+              <div class="mini-row"><span class="mini-label">Insurance certificate</span><span class="mini-badge green">✓ Active</span></div>
+              <div class="mini-row"><span class="mini-label">W-9 on file</span><span class="mini-badge green">✓ Verified</span></div>
+              <div class="mini-row"><span class="mini-label">DOT number</span><span class="mini-badge green">✓ Active</span></div>
+              <div class="mini-row"><span class="mini-label">Safety rating</span><span class="mini-val green">Satisfactory</span></div>
+              <div class="mini-row"><span class="mini-label">Fleet & drivers</span><span class="mini-val">14 trucks · 18 drivers</span></div>
+              <div style="margin-top:12px;padding:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;font-size:11px;color:var(--green);text-align:center">✓ Approved — eligible for invitations</div>
+            </div>
+
+            <div class="screen-panel" id="sp-1">
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Driver Onboarding · Marco G.</div>
+              <div class="mini-row"><span class="mini-label">CDL & medical card</span><span class="mini-badge green">✓ Uploaded</span></div>
+              <div class="mini-row"><span class="mini-label">MVR check</span><span class="mini-badge green">✓ Clean</span></div>
+              <div class="mini-row"><span class="mini-label">Drug test</span><span class="mini-badge amber">Pending · 4 days left</span></div>
+              <div class="mini-row"><span class="mini-label">Orientation</span><span class="mini-val">Scheduled · Tue 9 AM</span></div>
+              <div class="mini-row"><span class="mini-label">Language</span><span class="mini-val orange">Español</span></div>
+              <div style="margin-top:12px;padding:8px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:6px;font-size:11px;color:var(--amber);text-align:center">Cleared once drug test confirmed</div>
+            </div>
+
+            <div class="screen-panel" id="sp-2">
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">New Load · Aggregate Haul</div>
+              <div class="mini-row"><span class="mini-label">Lane</span><span class="mini-val">Houston → Conroe</span></div>
+              <div class="mini-row"><span class="mini-label">Equipment</span><span class="mini-val">Belly Dump</span></div>
+              <div class="mini-row"><span class="mini-label">Volume</span><span class="mini-val">26 tons × 12 loads/day</span></div>
+              <div class="mini-row"><span class="mini-label">Mode</span><span class="mini-val orange">Open Bid</span></div>
+              <div class="mini-row"><span class="mini-label">Carriers matched</span><span class="mini-val green">7 verified</span></div>
+              <div style="margin-top:12px;padding:8px;background:rgba(249,115,22,0.06);border:1px solid var(--orange-border);border-radius:6px;font-size:11px;color:var(--orange);text-align:center">Send Invitations →</div>
+            </div>
+
+            <div class="screen-panel" id="sp-3">
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Award Decision · Lone Star Hauling</div>
+              <div class="mini-row"><span class="mini-label">Bid</span><span class="mini-val">$11.40 / ton</span></div>
+              <div class="mini-row"><span class="mini-label">Safety score</span><span class="mini-val green">98 / 100</span></div>
+              <div class="mini-row"><span class="mini-label">On-time history</span><span class="mini-val green">98%</span></div>
+              <div class="mini-row"><span class="mini-label">Disputes (12mo)</span><span class="mini-val green">0</span></div>
+              <div class="mini-row"><span class="mini-label">Consistency</span><span class="mini-val green">★★★★★</span></div>
+              <div style="margin-top:12px;padding:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;font-size:11px;color:var(--green);text-align:center">✓ Award Load to Lone Star Hauling</div>
+            </div>
+
+            <div class="screen-panel" id="sp-4">
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Pre-Trip + Live Run</div>
+              <div class="mini-row"><span class="mini-label">Brakes & tires</span><span class="mini-badge green">✓ Pass</span></div>
+              <div class="mini-row"><span class="mini-label">Lights & signals</span><span class="mini-badge green">✓ Pass</span></div>
+              <div class="mini-row"><span class="mini-label">Trailer & securement</span><span class="mini-badge green">✓ Pass</span></div>
+              <div class="mini-row"><span class="mini-label">Pickup ticket</span><span class="mini-badge green">QR · GPS ✓</span></div>
+              <div class="mini-row"><span class="mini-label">Status</span><span class="mini-badge amber">🚛 In transit · ETA 28m</span></div>
+              <div style="margin-top:10px;font-size:10px;color:var(--g3);text-align:center">Driver workflow under 2 minutes · EN/ES</div>
+            </div>
+
+            <div class="screen-panel" id="sp-5">
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">End of Day · Settlement Pack</div>
+              <div class="mini-row"><span class="mini-label">Loads completed</span><span class="mini-val">12 of 12</span></div>
+              <div class="mini-row"><span class="mini-label">Total tonnage</span><span class="mini-val">314.6 tons</span></div>
+              <div class="mini-row"><span class="mini-label">PDF tickets generated</span><span class="mini-val green">✓ 12</span></div>
+              <div class="mini-row"><span class="mini-label">Invoice package</span><span class="mini-val orange">Ready to send</span></div>
+              <div style="margin-top:10px;display:flex;gap:6px">
+                <div style="flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:5px;padding:6px 8px;font-size:10px;color:var(--g2);text-align:center">↓ PDF Pack</div>
+                <div style="flex:2;background:var(--orange);border-radius:5px;padding:6px 8px;font-size:10px;color:var(--white);text-align:center;font-weight:500">Send Invoice →</div>
+              </div>
+              <div style="font-size:10px;color:var(--green);margin-top:8px;text-align:center">✓ Records archived · Bank-ready</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BID BOARD FEATURE -->
+<section class="bidboard-section" id="bidboard">
+  <div class="bidboard-inner">
+    <div class="bidboard-header">
+      <div class="bidboard-eyebrow">
+        <div class="hero-eyebrow-dot"></div>
+        The Differentiator
+      </div>
+      <h2 class="bidboard-title">A bid board <em>you</em> control.<br>Not the carrier.</h2>
+      <p class="bidboard-sub">Public load boards put carriers in charge. Carry Ops flips it. You post the load. The platform invites only verified carriers who can actually run it. Bids are private — carriers can't see what each other bid. No race to the bottom. No shopping your rates around the market.</p>
+    </div>
+
+    <div class="bidboard-grid">
+      <div>
+        <div style="font-family:var(--font-display);font-size:24px;color:var(--white);margin-bottom:14px;line-height:1.25">Two ways to award. Always your call.</div>
+        <div class="bidboard-modes">
+          <div class="mode-pill"><span class="dot"></span>Open Bid Mode</div>
+          <div class="mode-pill"><span class="dot"></span>Set-Rate Mode</div>
+        </div>
+        <p style="font-size:14px;color:var(--g2);line-height:1.7;margin-top:18px"><strong style="color:var(--white)">Open Bid</strong> — let qualified carriers bid privately. <strong style="color:var(--white)">Set-Rate</strong> — pre-set the price you're willing to pay and send it to carriers who can fulfill. They accept or decline, no haggling. You stay in control either way.</p>
+
+        <div class="bidboard-criteria">
+          <div class="crit-card">
+            <div class="crit-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-shield"/></svg></div>
+            <div class="crit-name">Safety</div>
+            <div class="crit-desc">DOT scores, inspection history, and incident record visible right at award time.</div>
+          </div>
+          <div class="crit-card">
+            <div class="crit-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-truck"/></svg></div>
+            <div class="crit-name">Capability</div>
+            <div class="crit-desc">Equipment match, capacity, and lane experience — pre-filtered before the invitation.</div>
+          </div>
+          <div class="crit-card">
+            <div class="crit-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-dollar"/></svg></div>
+            <div class="crit-name">Price</div>
+            <div class="crit-desc">Bid amount or your set rate. Fair, transparent, never shopped to other carriers.</div>
+          </div>
+          <div class="crit-card">
+            <div class="crit-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-trend"/></svg></div>
+            <div class="crit-name">Consistency</div>
+            <div class="crit-desc">On-time history, completion rate, and dispute frequency — earned over real loads.</div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="bidboard-mock">
+          <div class="bidmock-bar">
+            <div class="how-screen-dot" style="background:#FF5F57"></div>
+            <div class="how-screen-dot" style="background:#FEBC2E"></div>
+            <div class="how-screen-dot" style="background:#28C840"></div>
+            <div class="bidmock-title">Carry Ops · Private Bid Board</div>
+          </div>
+          <div class="bidmock-body">
+            <div class="bidmock-load-header">
+              <div>
+                <div class="bidmock-load-title">Aggregate Haul · Houston → Conroe</div>
+                <div class="bidmock-load-meta">Posted 14m ago · Closes in 1h 46m</div>
+              </div>
+              <div class="bidmock-status"><span class="dot"></span>Open Bid</div>
+            </div>
+            <div class="bidmock-spec">
+              <div class="bidmock-spec-row"><span class="bidmock-spec-label">Equipment</span><span class="bidmock-spec-val">Belly Dump</span></div>
+              <div class="bidmock-spec-row"><span class="bidmock-spec-label">Tonnage</span><span class="bidmock-spec-val">26 tons</span></div>
+              <div class="bidmock-spec-row"><span class="bidmock-spec-label">Loads</span><span class="bidmock-spec-val">12 / day</span></div>
+              <div class="bidmock-spec-row"><span class="bidmock-spec-label">Window</span><span class="bidmock-spec-val">14 days</span></div>
+              <div class="bidmock-spec-row"><span class="bidmock-spec-label">Invited carriers</span><span class="bidmock-spec-val" style="color:var(--orange)">7 verified</span></div>
+              <div class="bidmock-spec-row"><span class="bidmock-spec-label">Bids received</span><span class="bidmock-spec-val">4</span></div>
+            </div>
+            <div class="bidmock-bids-label" style="display:flex;align-items:center;gap:6px"><svg class="ico ico-orange" width="11" height="11" style="stroke:var(--g3)"><use href="#i-lock"/></svg>Bids visible only to you</div>
+            <div class="bid-row winner">
+              <div class="bid-carrier">
+                <div class="bid-name">Lone Star Hauling <span class="bid-badge">Top Match</span></div>
+                <div class="bid-stars"><span class="gold">★★★★★</span> · 98% on-time · 0 disputes</div>
+              </div>
+              <div class="bid-amount winner-amt">$ 11.40 / ton</div>
+            </div>
+            <div class="bid-row">
+              <div class="bid-carrier">
+                <div class="bid-name">Bayou Belly Dumps</div>
+                <div class="bid-stars"><span class="gold">★★★★</span>★ · 94% on-time · 1 dispute</div>
+              </div>
+              <div class="bid-amount">$ 11.10 / ton</div>
+            </div>
+            <div class="bid-row">
+              <div class="bid-carrier">
+                <div class="bid-name">Coastal Aggregate Co.</div>
+                <div class="bid-stars"><span class="gold">★★★★</span>★ · 91% on-time · 2 disputes</div>
+              </div>
+              <div class="bid-amount">$ 10.85 / ton</div>
+            </div>
+            <div class="bid-row">
+              <div class="bid-carrier">
+                <div class="bid-name">Rio Grande Carriers</div>
+                <div class="bid-stars"><span class="gold">★★★</span>★★ · 88% on-time · 3 disputes</div>
+              </div>
+              <div class="bid-amount">$ 10.50 / ton</div>
+            </div>
+            <div style="margin-top:12px;padding:10px;background:rgba(249,115,22,0.06);border:1px solid var(--orange-border);border-radius:6px;font-size:11px;color:var(--orange);text-align:center">Award on safety + capability + price + consistency →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<section class="features-section" id="modules">
+  <div class="section-inner">
+    <div class="section-eyebrow">Platform Modules</div>
+    <h2 class="section-title">Everything that runs<br>a trucking operation. Connected.</h2>
+    <p class="section-sub">Built for the way bulk hauling, aggregate, dump trucking, oilfield, and broker networks actually work. Pick what you need today. Layer in the rest as you grow.</p>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-gavel"/></svg></div>
+        <div class="feat-title">Private Bid Board <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">You post the load. Verified carriers get invited. Bids stay private — no race to the bottom. Open Bid or Set-Rate, your call. Award on safety, capability, price, and consistency.</div>
+        <div class="feat-tag">Our differentiator</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-building"/></svg></div>
+        <div class="feat-title">Carrier Onboarding <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">Bring carriers onto the network with built-in verification. Insurance, W-9, DOT, fleet, drivers, safety — all checked before they're approved. Expired or missing? They don't get on. Period.</div>
+        <div class="feat-tag">Trust by default</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-user"/></svg></div>
+        <div class="feat-title">Driver Onboarding & Assessment <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">Lead to active driver in one funnel — application, docs, MVR, drug test, supervisor handoff, orientation, training, activation. No more inbox chaos. No more drop-offs.</div>
+        <div class="feat-tag">Bilingual EN/ES</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-phone"/></svg></div>
+        <div class="feat-title">Digital E-Ticketing <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">QR ticketing on the driver's phone. GPS-stamped, e-signed, PDF-ready. Scale house to delivery to invoice — one digital trail, zero paper slips blowing around the yard.</div>
+        <div class="feat-tag">Scalehouse + driver flow</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-shield"/></svg></div>
+        <div class="feat-title">Compliance Guard <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">Mobile pre-trip inspections built for drivers — big buttons, photo capture, voice notes. DOT-aligned checklists. Critical fail locks dispatch automatically. Every check timestamped.</div>
+        <div class="feat-tag">DVIR-ready</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-mic"/></svg></div>
+        <div class="feat-title">AI Receptionist <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">Voice AI that calls candidates, explains the job, sends SMS reminders for missing docs, and answers status calls when applicants ring back. English and Spanish. No accent bias.</div>
+        <div class="feat-tag">Inbound + outbound</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-receipt"/></svg></div>
+        <div class="feat-title">CashFlow Accelerator <span class="feat-status-pill req">Bank Tie-In</span></div>
+        <div class="feat-desc">POD-to-invoice automation. Auto-built billing packages, AR reminders, days-to-pay tracking. Optional bank integration (PNC and others) accelerates collections — enabled on request.</div>
+        <div class="feat-tag">Available on request</div>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-chart"/></svg></div>
+        <div class="feat-title">Operations Analytics <span class="feat-status-pill live"><span class="dot"></span>Live</span></div>
+        <div class="feat-desc">Loads by day, week, month. Performance by carrier, driver, lane. Demand vs. capacity. Real-time exceptions. The dashboard your operations lead actually checks every morning.</div>
+        <div class="feat-tag">Leadership-ready</div>
+      </div>
+      <div class="feat-card coming-soon">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-star"/></svg></div>
+        <div class="feat-title">Driver Retention System <span class="feat-status-pill soon">Coming Soon</span></div>
+        <div class="feat-desc">Performance scorecards and recognition workflows that reward your best drivers and reduce turnover. Built on activity already captured in the platform.</div>
+        <div class="feat-tag">Phase 2</div>
+      </div>
+      <div class="feat-card coming-soon">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-wrench"/></svg></div>
+        <div class="feat-title">Uptime Optimizer <span class="feat-status-pill soon">Coming Soon</span></div>
+        <div class="feat-desc">Predictive maintenance, breakdown trend analysis, downtime reporting. Turns inspection data into preventive action — before a truck breaks down on the side of the road.</div>
+        <div class="feat-tag">Phase 2</div>
+      </div>
+      <div class="feat-card coming-soon">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-trend"/></svg></div>
+        <div class="feat-title">Planning & Forecasting <span class="feat-status-pill soon">Coming Soon</span></div>
+        <div class="feat-desc">Demand forecasting, fleet utilization, and capacity planning. Make dispatch decisions on data, not on whatever today's volume becomes by 9 AM.</div>
+        <div class="feat-tag">Phase 2</div>
+      </div>
+      <div class="feat-card coming-soon">
+        <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-target"/></svg></div>
+        <div class="feat-title">Custom Analytics <span class="feat-status-pill soon">Coming Soon</span></div>
+        <div class="feat-desc">Custom dashboards built around your specific KPIs. Request the views, exports, and alerts you actually need — without writing a line of code.</div>
+        <div class="feat-tag">Phase 2</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROLES -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-eyebrow">Built for Every Role</div>
+    <h2 class="section-title">Everyone gets the view<br>they actually need.</h2>
+    <p class="section-sub">No one is stuck running the system. Everyone is just doing their job — faster, with full context, and without paperwork getting in the way.</p>
+    <div class="roles-tabs">
+      <button class="role-tab active" onclick="setRole('shipper',event)">Shipper</button>
+      <button class="role-tab" onclick="setRole('broker',event)">Broker</button>
+      <button class="role-tab" onclick="setRole('dispatch',event)">Dispatch</button>
+      <button class="role-tab" onclick="setRole('driver',event)">Driver</button>
+      <button class="role-tab" onclick="setRole('compliance',event)">Compliance</button>
+    </div>
+
+    <div class="role-panel active" id="role-shipper">
+      <div class="role-gets">
+        <div class="role-gets-title">What you get</div>
+        <div class="role-item"><span class="role-check">✓</span>A bid board you control — you decide who gets invited and who wins</div>
+        <div class="role-item"><span class="role-check">✓</span>A network of pre-vetted carriers, no public-board roulette</div>
+        <div class="role-item"><span class="role-check">✓</span>Award on safety, capability, price, and consistency — not just price</div>
+        <div class="role-item"><span class="role-check">✓</span>Live load status and a digital ticket archive that's actually searchable</div>
+        <div class="role-item"><span class="role-check">✓</span>Auto-built invoice packages, audit-ready, every time</div>
+      </div>
+      <div class="role-no-more">
+        <div class="role-gets-title">No more…</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Public load boards exposing your rates to the whole market</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Vetting carriers manually every single load</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Lost paper tickets and disputes weeks after delivery</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Re-keying ticket data into your invoicing system</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Wondering if the truck actually showed up on time</div>
+      </div>
+    </div>
+
+    <div class="role-panel" id="role-broker">
+      <div class="role-gets">
+        <div class="role-gets-title">What you get</div>
+        <div class="role-item"><span class="role-check">✓</span>Manage shippers and carriers in one workspace, not five spreadsheets</div>
+        <div class="role-item"><span class="role-check">✓</span>Run multiple private bid boards in parallel without losing your place</div>
+        <div class="role-item"><span class="role-check">✓</span>Carrier scorecards built from real performance, not from memory</div>
+        <div class="role-item"><span class="role-check">✓</span>End-to-end visibility from load post to delivery to invoice</div>
+        <div class="role-item"><span class="role-check">✓</span>Compliance and document tracking handled across every carrier</div>
+      </div>
+      <div class="role-no-more">
+        <div class="role-gets-title">No more…</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Email threads of insurance certs and W-9s flying around</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Carrier vetting living in one person's head</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Manually matching loads to carriers who can run them</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Re-explaining the same load status to shippers all afternoon</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Reconciling scale tickets at the end of every month</div>
+      </div>
+    </div>
+
+    <div class="role-panel" id="role-dispatch">
+      <div class="role-gets">
+        <div class="role-gets-title">What you get</div>
+        <div class="role-item"><span class="role-check">✓</span>One board showing trucks ready, blocked, in transit, delivered</div>
+        <div class="role-item"><span class="role-check">✓</span>Pre-trip lockouts that flag unsafe trucks before they roll</div>
+        <div class="role-item"><span class="role-check">✓</span>Auto-generated PDF tickets — no scale-house phone tag</div>
+        <div class="role-item"><span class="role-check">✓</span>Driver communication built in (SMS plus AI calling)</div>
+        <div class="role-item"><span class="role-check">✓</span>Alerts the moment a load drifts off schedule</div>
+      </div>
+      <div class="role-no-more">
+        <div class="role-gets-title">No more…</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Calling drivers all morning to confirm they started the day</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Finding out about safety failures after the truck is on the road</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Hand-typing tickets from scribbled scale slips</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Spreadsheet handoffs at every shift change</div>
+      </div>
+    </div>
+
+    <div class="role-panel" id="role-driver">
+      <div class="role-gets">
+        <div class="role-gets-title">What you get</div>
+        <div class="role-item"><span class="role-check">✓</span>A mobile workflow that's done in under two minutes</div>
+        <div class="role-item"><span class="role-check">✓</span>English or Spanish — pick once, runs everywhere</div>
+        <div class="role-item"><span class="role-check">✓</span>QR scan at pickup, e-sign at delivery — no paperwork</div>
+        <div class="role-item"><span class="role-check">✓</span>Pre-trip with big buttons, photos, and voice notes</div>
+        <div class="role-item"><span class="role-check">✓</span>Clear pay status and load history without making a phone call</div>
+      </div>
+      <div class="role-no-more">
+        <div class="role-gets-title">No more…</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Paper tickets blowing out the cab window</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Calling dispatch to ask what's next</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Filling out paper DVIRs after a 14-hour shift</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Apps that need a tutorial just to log a load</div>
+      </div>
+    </div>
+
+    <div class="role-panel" id="role-compliance">
+      <div class="role-gets">
+        <div class="role-gets-title">What you get</div>
+        <div class="role-item"><span class="role-check">✓</span>Every inspection timestamped, photographed, and on file</div>
+        <div class="role-item"><span class="role-check">✓</span>Critical defects automatically lock dispatch — no human override</div>
+        <div class="role-item"><span class="role-check">✓</span>Repeat-defect tracking by truck and by driver</div>
+        <div class="role-item"><span class="role-check">✓</span>Insurance, MVR, drug test, and CDL expiration alerts</div>
+        <div class="role-item"><span class="role-check">✓</span>DOT audit pack on demand, not assembled in a panic</div>
+      </div>
+      <div class="role-no-more">
+        <div class="role-gets-title">No more…</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Paper DVIRs disappearing</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Catching expired medical cards after the fact</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Audit prep that takes weeks of digging through email</div>
+        <div class="no-more-item"><span class="no-more-x">✕</span>Drivers using their own paper checklists, no two the same</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARISON -->
+<section class="compare-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">How We Compare</div>
+    <h2 class="section-title">Built differently.<br>Because trucking <em style="font-style:italic;color:var(--orange)">is</em> different.</h2>
+    <p class="section-sub">Most software in this space is either a generic TMS adapted from freight, a public load board that turns your rates into a price war, or a spreadsheet that breaks the moment you grow. Carry Ops is built for shipper- and broker-led operations.</p>
+    <div class="compare-table-wrap">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>What matters</th>
+            <th class="co-col">Carry Ops</th>
+            <th>Legacy TMS</th>
+            <th>Public Load Boards</th>
+            <th>Spreadsheets</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat-divider"><td colspan="5">Sourcing & Awarding</td></tr>
+          <tr>
+            <td>You control who gets invited to bid</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Bids stay private from competing carriers</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Partial</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">N/A</span></td>
+          </tr>
+          <tr>
+            <td>Carriers verified before they can bid</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Manual</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">Manual</span></td>
+          </tr>
+          <tr>
+            <td>Award on safety, capability, price, consistency</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+
+          <tr class="cat-divider"><td colspan="5">Operations</td></tr>
+          <tr>
+            <td>Mobile QR e-ticketing</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Add-on</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Driver onboarding & assessment</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Partial</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Pre-trip inspection with dispatch lock</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Add-on</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>AI voice assistant for driver hiring</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Bilingual EN/ES driver workflow</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Limited</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+
+          <tr class="cat-divider"><td colspan="5">Cash & Visibility</td></tr>
+          <tr>
+            <td>Auto-invoice from delivered tickets</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Partial</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Bank tie-in for accelerated collections</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Real-time leadership dashboards</td>
+            <td><span class="co-win">✓</span></td>
+            <td><span class="pc-neutral">Reports</span></td>
+            <td><span class="pc-lose">✕</span></td>
+            <td><span class="pc-lose">✕</span></td>
+          </tr>
+          <tr>
+            <td>Time to fully operational</td>
+            <td><span style="color:var(--green);font-weight:600">&lt;60 days</span></td>
+            <td>6–12 months</td>
+            <td>Same day</td>
+            <td>Same day</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);padding:20px 24px;margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center">
+      <div><div style="font-family:var(--font-display);font-size:22px;color:var(--orange);margin-bottom:4px">70-80%</div><div style="font-size:12px;color:var(--g3)">Less admin work after digital ticketing rollout (industry benchmark)</div></div>
+      <div><div style="font-family:var(--font-display);font-size:22px;color:var(--orange);margin-bottom:4px">2.1M</div><div style="font-size:12px;color:var(--g3)">Logistics jobs projected unfilled by 2030 — manual processes are no longer sustainable</div></div>
+      <div><div style="font-family:var(--font-display);font-size:22px;color:var(--orange);margin-bottom:4px">&lt;60 days</div><div style="font-size:12px;color:var(--g3)">Kickoff to live — vs. 6–12 months for legacy TMS deployments</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SOFT GATE -->
+<div style="background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%);padding:56px 5%;text-align:center;border-top:1px solid rgba(255,255,255,0.05);border-bottom:1px solid rgba(255,255,255,0.05)">
+  <div style="max-width:600px;margin:0 auto">
+    <div style="font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:12px">Before You Go Further</div>
+    <div style="font-family:var(--font-display);font-size:clamp(22px,3vw,32px);color:var(--white);font-weight:400;margin-bottom:12px;line-height:1.2">The details are better in a conversation.</div>
+    <div style="font-size:15px;color:var(--g2);line-height:1.7;margin-bottom:24px">Pricing, timeline, and the live bid board demo all depend on your loads, lanes, and carrier network. 15 minutes. No commitment.</div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn-hero btn-hero-primary" onclick="scrollToDemo()">Book a 15-Minute Call →</button>
+      <button class="btn-hero btn-hero-ghost" onclick="document.getElementById('pricing').scrollIntoView({behavior:'smooth'})">See Pricing First</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-inner">
+    <div class="section-eyebrow">Pricing</div>
+    <h2 class="section-title">Here's what your<br>monthly bill looks like.</h2>
+    <p class="section-sub">A base platform fee, a flat $2 per load, and only the add-ons you toggle on. Three lines on one invoice. No revenue cuts. No tier games. No surprises at month-end.</p>
+
+    <div class="invoice-wrap">
+      <!-- Sample invoice mockup -->
+      <div class="invoice">
+        <div class="invoice-bar">
+          <div class="invoice-dot" style="background:#FF5F57"></div>
+          <div class="invoice-dot" style="background:#FEBC2E"></div>
+          <div class="invoice-dot" style="background:#28C840"></div>
+          <div class="invoice-title">Carry Ops · Sample Invoice Preview</div>
+        </div>
+        <div class="invoice-body">
+          <div class="invoice-head">
+            <div class="invoice-head-row">
+              <div class="invoice-co">Your Operation, LLC</div>
+              <div class="invoice-meta">Monthly · April 2026</div>
+            </div>
+            <div class="small muted">Three line items. One total. That's the whole pricing model.</div>
+          </div>
+
+          <!-- Line 1: Base -->
+          <div class="invoice-row">
+            <div class="invoice-row-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-shield"/></svg></div>
+            <div>
+              <div class="invoice-row-name">Base Platform Fee</div>
+              <div class="invoice-row-detail">Carrier Onboarding · Digital E-Ticketing · Private Bid Board · Operations Analytics · Magic-link drivers · All user roles</div>
+            </div>
+            <div class="invoice-row-amount">$ ___<span class="qty">Flat monthly</span></div>
+          </div>
+
+          <!-- Line 2: Per-load -->
+          <div class="invoice-row">
+            <div class="invoice-row-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-receipt"/></svg></div>
+            <div>
+              <div class="invoice-row-name">Per-Load Fee · Flat $2</div>
+              <div class="invoice-row-detail">Same fee whether the load is worth $500 or $5,000. Covers ticket processing, magic links to drivers and destinations, PDF archival, GPS, signatures, photos, and audit trail.</div>
+            </div>
+            <div class="invoice-row-amount">$2 × N<span class="qty">Loads run</span></div>
+          </div>
+
+          <!-- Line 3: Add-ons -->
+          <div class="invoice-row">
+            <div class="invoice-row-icon"><svg class="ico ico-orange" width="16" height="16"><use href="#i-cog"/></svg></div>
+            <div>
+              <div class="invoice-row-name">Modular Add-Ons (only what you toggle on)</div>
+              <div class="invoice-row-detail">Driver Onboarding & Assessment · Compliance Guard (DVIR) · AI Receptionist (EN/ES) · CashFlow Accelerator (bank tie-in). Brokers using carrier fleets often skip these entirely.</div>
+            </div>
+            <div class="invoice-row-amount">$ ___<span class="qty">Per add-on</span></div>
+          </div>
+
+          <!-- Total -->
+          <div class="invoice-total">
+            <div class="invoice-total-label">Your monthly total</div>
+            <div class="invoice-total-amount">$ ___</div>
+            <div class="invoice-total-sub">Pricing tailored to your load volume and which add-ons you turn on. Get a quote in 15 minutes.</div>
+          </div>
+
+          <div class="invoice-foot">
+            <small>No percentage of load value · No revenue cut · Toggle add-ons anytime</small>
+            <small style="color:var(--orange);font-weight:500">Carry Ops · A platform by AI FusionIQ Labs</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Three-line explainer next to the invoice -->
+      <div class="invoice-explainer">
+        <div class="invoice-exp-card">
+          <div class="invoice-exp-num">PART 1</div>
+          <div class="invoice-exp-name">Base Platform Fee</div>
+          <div class="invoice-exp-desc">Flat monthly fee that covers the platform itself. Includes carrier onboarding with verification, digital ticketing, the Private Bid Board, and analytics. Magic-link drivers — third-party drivers from your carriers — are included free.</div>
+        </div>
+        <div class="invoice-exp-card" style="border-color:var(--orange-border);background:linear-gradient(135deg,var(--navy3) 0%,rgba(249,115,22,0.04) 100%)">
+          <div class="invoice-exp-num">PART 2</div>
+          <div class="invoice-exp-name">$2 per load · flat</div>
+          <div class="invoice-exp-desc">Same fee for every load processed through the platform — same price regardless of load value or volume. Covers the real cost of running each load: ticket generation, magic links, PDF archival, audit trail. No percentage. Ever.</div>
+        </div>
+        <div class="invoice-exp-card">
+          <div class="invoice-exp-num">PART 3</div>
+          <div class="invoice-exp-name">Modular add-ons</div>
+          <div class="invoice-exp-desc">Only pay for the modules you actually use. Driver Onboarding, Compliance Guard, AI Receptionist, and CashFlow Accelerator carry real cost on our side (compliance liability, voice minutes, MVR API calls, bank integrations) — so they're priced as add-ons. Toggle on or off anytime.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="invoice-cta-row">
+      <button class="btn-hero btn-hero-primary" onclick="scrollToDemo()">Get a Quote → 15-min call</button>
+      <button class="btn-hero btn-hero-ghost" onclick="document.getElementById('faq').scrollIntoView({behavior:'smooth'})">Pricing FAQ</button>
+    </div>
+
+    <!-- Why this model works -->
+    <div class="pricing-callout" style="margin-top:32px">
+      <strong>Why this model works.</strong> Magic-link drivers cost almost nothing to run, so they're free in the base. Driver Onboarding, Compliance Guard, and AI Receptionist carry real cost (compliance liability, voice minutes, MVR API calls) — so they're priced as add-ons. You don't pay for what you don't use, and you don't pay more when your loads pay more.
+    </div>
+
+    <!-- Modular add-ons grid -->
+    <div class="addons-grid">
+      <div class="addon-card">
+        <div class="addon-icon"><svg class="ico ico-orange" width="14" height="14"><use href="#i-star"/></svg></div>
+        <div class="addon-name">Driver Retention</div>
+        <div class="addon-desc">Performance scorecards & engagement workflows</div>
+      </div>
+      <div class="addon-card">
+        <div class="addon-icon"><svg class="ico ico-orange" width="14" height="14"><use href="#i-wrench"/></svg></div>
+        <div class="addon-name">Uptime Optimizer</div>
+        <div class="addon-desc">Predictive maintenance & breakdown trends</div>
+      </div>
+      <div class="addon-card">
+        <div class="addon-icon"><svg class="ico ico-orange" width="14" height="14"><use href="#i-trend"/></svg></div>
+        <div class="addon-name">Planning & Forecasting</div>
+        <div class="addon-desc">Demand projections & capacity planning</div>
+      </div>
+      <div class="addon-card">
+        <div class="addon-icon"><svg class="ico ico-orange" width="14" height="14"><use href="#i-target"/></svg></div>
+        <div class="addon-name">Custom Analytics</div>
+        <div class="addon-desc">Tailored KPI dashboards built around your ops</div>
+      </div>
+    </div>
+
+    <!-- Enterprise callout (exit path, not a tier) -->
+    <div class="enterprise-card">
+      <div class="enterprise-card-text">
+        <div class="enterprise-card-eyebrow">Enterprise</div>
+        <div class="enterprise-card-title">Multi-yard, high-volume, or custom integrations?</div>
+        <div class="enterprise-card-desc">For operations running 1,000+ loads per month, multiple yards, custom bank or ERP integrations, or compliance-heavy industries (oilfield, hazmat) that need SLAs and dedicated support — we build a custom contract. Volume-based per-load pricing, white-glove onboarding, and a dedicated success partner from AI FusionIQ Labs.</div>
+      </div>
+      <button class="btn-hero btn-hero-primary" onclick="scrollToDemo()">Talk to Enterprise →</button>
+    </div>
+
+    <!-- What we won't do -->
+    <div class="pricing-callout" style="margin-top:14px">
+      <strong>What we won't do.</strong> We won't take a percentage of your load value. We won't charge you more when your loads pay more. We won't gate your differentiator behind a tier — the Private Bid Board is in the base. Pricing scales with how much you use the platform, not how much you make on each load.
+    </div>
+  </div>
+</section>
+
+<!-- DEMO GATE -->
+<section class="gate-section" id="demo">
+  <div class="gate-wrap">
+    <div class="gate-left">
+      <div class="section-eyebrow">Discovery Call</div>
+      <h2 class="section-title">15 minutes.<br>Tailored to your loads.</h2>
+      <p>Tell us about your operation — load volume, lanes, carriers, and where the friction lives. We'll map Carry Ops to your reality and walk through a live demo of the Private Bid Board.</p>
+      <div class="what-to-expect">
+        <div class="expect-item"><span class="expect-check">→</span>15-minute focused conversation. No sales pitch.</div>
+        <div class="expect-item"><span class="expect-check">→</span>We map Carry Ops to your specific lanes and carriers</div>
+        <div class="expect-item"><span class="expect-check">→</span>Live walkthrough of the Private Bid Board and modules</div>
+        <div class="expect-item"><span class="expect-check">→</span>Founding partner pricing for early shippers and brokers</div>
+      </div>
+    </div>
+    <div>
+      <div class="gate-form-wrap">
+        <div id="form-main">
+          <div class="gate-form-title">Book Your Discovery Call</div>
+          <div class="gate-form-sub">Fill in your details and we'll respond within 24 hours to schedule a time that works for you.</div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">First Name</label><input class="form-input" type="text" placeholder="Jane" id="f-first"></div>
+            <div class="form-group"><label class="form-label">Last Name</label><input class="form-input" type="text" placeholder="Doe" id="f-last"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Work Email</label><input class="form-input" type="email" placeholder="jane@yourcompany.com" id="f-email"></div>
+          <div class="form-group"><label class="form-label">Company</label><input class="form-input" type="text" placeholder="Your company name" id="f-company"></div>
+          <div class="form-group"><label class="form-label">Role</label>
+            <select class="form-select" id="f-role">
+              <option>Shipper / Operations Lead</option>
+              <option>Broker / Logistics Manager</option>
+              <option>Founder / Owner</option>
+              <option>Dispatch / Fleet Manager</option>
+              <option>Compliance / Safety</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Approx. monthly load volume</label>
+            <select class="form-select" id="f-volume">
+              <option>Under 100 loads</option>
+              <option>100 – 500 loads</option>
+              <option>500 – 2,000 loads</option>
+              <option>2,000+ loads</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Biggest pain point (optional)</label><input class="form-input" type="text" placeholder="e.g. lost tickets, slow billing, carrier vetting…" id="f-pain"></div>
+          <button class="form-submit" onclick="submitForm()">
+            Book My Discovery Call →
+          </button>
+          <div class="form-privacy">No commitment. No spam. Your information is used only to schedule your call.</div>
+        </div>
+        <div class="form-success" id="form-success">
+          <div class="form-success-icon"><svg class="ico" width="48" height="48" style="stroke:var(--green)"><use href="#i-check"/></svg></div>
+          <div class="form-success-title">You're booked in.</div>
+          <div class="form-success-sub">We'll reach out within 24 hours to confirm your time. In the meantime, check your inbox — we've sent a preview of the platform.</div>
+          <div class="what-to-expect" style="text-align:left">
+            <div class="expect-item"><span class="expect-check">✓</span>Confirmation email sent</div>
+            <div class="expect-item"><span class="expect-check">✓</span>Founding partner pricing reserved</div>
+            <div class="expect-item"><span class="expect-check">✓</span>Bid Board demo unlocked — link in your email</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section" id="faq">
+  <div class="section-inner">
+    <div class="section-eyebrow">Frequently Asked</div>
+    <h2 class="section-title">Quick answers.</h2>
+    <div class="faq-list">
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">How is the Private Bid Board different from a public load board? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Public boards expose your loads (and rates) to the entire market and put carriers in control. Carry Ops is invitation-only — you decide which verified carriers see the load, bids stay private from competing carriers, and you award on a combination of safety, capability, price, and consistency. No race to the bottom.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">How long does it take to go live? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Most operations are live within 60 days from kickoff. That includes carrier onboarding, e-ticketing, and the bid board for Growth-tier customers. Compare that to legacy TMS deployments that routinely take 6 to 12 months.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Will drivers actually use it? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">The driver workflow is mobile-first with big buttons, minimal typing, photo capture, voice notes, and full English/Spanish support. Tickets take under two minutes. Adoption sticks because it saves drivers time, not adds to it. Field resistance is the first thing the platform is designed against.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Can carriers refuse a set rate? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Yes. In Set-Rate mode, you pre-set the price you're willing to pay and the platform sends the load to verified carriers who can fulfill. They accept or decline. No haggling. If no one accepts, you can switch to Open Bid mode or adjust the rate.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What about the bank integration? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">CashFlow Accelerator includes optional bank tie-in (PNC and others) that's enabled on shipper request. It accelerates collections by automating the POD-to-invoice-to-deposit flow. Available on the Enterprise tier and as an add-on.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Do you charge per load or per revenue? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Pricing has three parts: a base platform fee, a flat $2 per load processed, and optional add-ons for the modules you actually use. The $2 per load is the same whether the load is worth $500 or $5,000 — it covers the platform infrastructure that processes the ticket, sends magic links to driver and destination, and archives the PDF for compliance. We don't take a percentage of your load value, and we don't charge based on your revenue.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">What if I'm running 1,000+ loads a month? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">For high-volume operations, multi-yard shippers, brokers running custom integrations, or compliance-heavy industries (oilfield, hazmat) we build a custom Enterprise contract. That can include a volume-discounted per-load rate, white-glove onboarding, custom bank or ERP integrations, SLAs, and a dedicated success manager. Reach out and we'll build a quote tailored to your operation — there's no published rate card for Enterprise because no two operations are the same.</div>
+      </div>
+      <div class="faq-item" onclick="this.classList.toggle('open')">
+        <div class="faq-q">Who's behind Carry Ops? <span class="faq-toggle">+</span></div>
+        <div class="faq-a">Carry Ops is a platform by AI FusionIQ Labs, an operational AI firm based in Houston with 25+ years of domain experience across transportation, oilfield, and field operations. The platform is built on real trucking reality — not adapted from a generic SaaS template.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- POWERED BY BAR -->
+<div class="powered-bar">
+  <span class="powered-text">A platform by</span>
+  <a href="https://ai-fusioniq-labs.com" target="_blank" class="powered-brand">
+    <div class="powered-logo">AI</div>
+    <span class="powered-name"><span>AI FusionIQ</span> Labs</span>
+  </a>
+  <span class="powered-text" style="margin-left:8px">· Operational AI built for real businesses</span>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand">
+          <div class="footer-logo"><svg class="ico" width="16" height="16"><use href="#i-logo"/></svg></div>
+          <span class="footer-brand-name">Carry Ops</span>
+        </div>
+        <div class="footer-brand-desc">Load control for modern trucking operations. A bid board you control, carriers you can trust, and end-to-end digital workflows — built for shippers and brokers.</div>
+        <div style="margin-top:14px;font-size:12px;color:var(--g3)">A platform by <a href="https://ai-fusioniq-labs.com" target="_blank" style="color:var(--orange);text-decoration:none">AI FusionIQ Labs</a></div>
+      </div>
+      <div>
+        <div class="footer-links-title">Platform</div>
+        <a href="#how" class="footer-link">How It Works</a>
+        <a href="#bidboard" class="footer-link">Private Bid Board</a>
+        <a href="#modules" class="footer-link">Modules</a>
+        <a href="#pricing" class="footer-link">Pricing</a>
+      </div>
+      <div>
+        <div class="footer-links-title">Company</div>
+        <a href="https://ai-fusioniq-labs.com" target="_blank" class="footer-link">AI FusionIQ Labs</a>
+        <a href="https://linkedin.com/in/bennysingh" target="_blank" class="footer-link">LinkedIn</a>
+        <a href="tel:+18323374756" class="footer-link">+1 (832) 337-4756</a>
+      </div>
+      <div>
+        <div class="footer-links-title">Get Started</div>
+        <a href="#demo" class="footer-link">Book a Discovery Call</a>
+        <a href="#demo" class="footer-link">Founding Partner Offer</a>
+        <a href="#pricing" class="footer-link">View Pricing</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 Carry Ops · A platform by AI FusionIQ Labs. All rights reserved.</div>
+      <div class="footer-powered">Built in Houston, TX · <a href="https://ai-fusioniq-labs.com" target="_blank">ai-fusioniq-labs.com</a></div>
+    </div>
+  </div>
+</footer>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toast-msg"></span></div>
+
+<script>
+const howTitles=['Carrier Verification','Driver Onboarding','Post a Load','Award Decision','Pre-Trip + Live Run','Settlement Pack'];
+function setHowStep(n){
+  document.querySelectorAll('.how-step').forEach((s,i)=>{s.classList.toggle('active',i===n)});
+  document.querySelectorAll('.screen-panel').forEach((p,i)=>{p.classList.toggle('active',i===n)});
+  document.getElementById('how-screen-title').textContent=howTitles[n];
+}
+
+function setRole(id,e){
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.role-panel').forEach(p=>p.classList.remove('active'));
+  e.target.classList.add('active');
+  document.getElementById('role-'+id).classList.add('active');
+}
+
+function scrollToDemo(){
+  document.getElementById('demo').scrollIntoView({behavior:'smooth'});
+}
+
+let toastTimer;
+function showToast(msg){
+  clearTimeout(toastTimer);
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+function submitForm(){
+  const first=document.getElementById('f-first').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  const company=document.getElementById('f-company').value.trim();
+  if(!first||!email||!company){
+    showToast('Please fill in your name, email, and company to continue.');
+    return;
+  }
+  if(!email.includes('@')){
+    showToast('Please enter a valid work email address.');
+    return;
+  }
+  document.getElementById('form-main').style.display='none';
+  document.getElementById('form-success').style.display='block';
+  showToast('Booked! We\'ll be in touch within 24 hours.');
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    if(this.textContent==='ES'){
+      showToast('Spanish version available with discovery call.');
+    }
+  });
+});
+
+let howTimer=setInterval(()=>{
+  const active=document.querySelector('.how-step.active');
+  const steps=document.querySelectorAll('.how-step');
+  const idx=Array.from(steps).indexOf(active);
+  setHowStep((idx+1)%steps.length);
+},4500);
+document.querySelectorAll('.how-step').forEach(s=>{
+  s.addEventListener('click',()=>{clearInterval(howTimer)});
+});
+</script>
+</body>
+</html>

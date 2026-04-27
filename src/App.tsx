@@ -49,6 +49,7 @@ import CarriersPage from "./pages/shipper/CarriersPage";
 import CarrierDetailPage from "./pages/shipper/CarrierDetailPage";
 import BidPortal from "./pages/BidPortal";
 import CarryOpsDemoPage from "./pages/CarryOpsDemoPage";
+import CarryOpsMarketingLandingPage from "./pages/CarryOpsMarketingLandingPage";
 
 const queryClient = new QueryClient();
 
@@ -71,8 +72,9 @@ const App = () => {
                 <BrowserRouter>
                   <Routes>
                     {/* Public routes */}
-                    <Route path="/" element={<CarryOpsDemoPage />} />
-                    <Route path="/landing" element={<CarryOpsDemoPage />} />
+                    <Route path="/" element={<CarryOpsMarketingLandingPage />} />
+                    <Route path="/landing" element={<CarryOpsMarketingLandingPage />} />
+                    <Route path="/routing" element={<CarryOpsDemoPage />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/driver/login" element={<DriverLogin />} />
                     <Route path="/driver/signup" element={<DriverSignUp />} />
