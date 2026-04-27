@@ -71,7 +71,7 @@ const App = () => {
                 <BrowserRouter>
                   <Routes>
                     {/* Public routes */}
-                    <Route path="/" element={<Login />} />
+                    <Route path="/" element={<CarryOpsDemoPage />} />
                     <Route path="/landing" element={<CarryOpsDemoPage />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/driver/login" element={<DriverLogin />} />
