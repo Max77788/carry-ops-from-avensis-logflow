@@ -1,0 +1,250 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Base colors - Carry Ops dark logistics palette */
+    --background: 224 42% 7%;
+    --foreground: 38 30% 94%;
+
+    /* Card colors */
+    --card: 224 35% 10%;
+    --card-foreground: 38 30% 94%;
+
+    /* Popover colors */
+    --popover: 224 38% 9%;
+    --popover-foreground: 38 30% 94%;
+
+    /* Primary - Burnt orange */
+    --primary: 24 94% 52%;
+    --primary-foreground: 30 35% 98%;
+    --primary-hover: 22 92% 45%;
+
+    /* Secondary - Ink blue glass */
+    --secondary: 223 32% 14%;
+    --secondary-foreground: 38 30% 90%;
+
+    /* Success */
+    --success: 145 58% 44%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 145 42% 16%;
+
+    /* Warning - Amber highlight */
+    --warning: 38 96% 56%;
+    --warning-foreground: 224 42% 7%;
+    --warning-light: 32 72% 16%;
+
+    /* Muted */
+    --muted: 223 28% 15%;
+    --muted-foreground: 219 18% 68%;
+
+    /* Accent */
+    --accent: 24 72% 17%;
+    --accent-foreground: 26 95% 68%;
+
+    /* Destructive */
+    --destructive: 0 70% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders and inputs */
+    --border: 221 24% 20%;
+    --input: 221 24% 20%;
+    --ring: 24 94% 52%;
+
+    /* Radius */
+    --radius: 0.75rem;
+
+    /* Status colors */
+    --status-pending: 38 96% 56%;
+    --status-verified: 24 94% 52%;
+    --status-delivered: 145 65% 45%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(
+      135deg,
+      hsl(24 94% 52%) 0%,
+      hsl(18 88% 44%) 100%
+    );
+    --gradient-success: linear-gradient(
+      135deg,
+      hsl(145 65% 45%) 0%,
+      hsl(145 70% 55%) 100%
+    );
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.35);
+    --shadow-md: 0 12px 30px -18px hsl(0 0% 0% / 0.8);
+    --shadow-lg: 0 24px 60px -28px hsl(0 0% 0% / 0.9);
+    --shadow-glow: 0 0 32px hsl(24 94% 52% / 0.26);
+
+    /* Sidebar */
+    --sidebar-background: 224 38% 8%;
+    --sidebar-foreground: 38 30% 94%;
+    --sidebar-primary: 24 94% 52%;
+    --sidebar-primary-foreground: 30 35% 98%;
+    --sidebar-accent: 223 32% 14%;
+    --sidebar-accent-foreground: 38 30% 90%;
+    --sidebar-border: 221 24% 20%;
+    --sidebar-ring: 24 94% 52%;
+  }
+
+  .dark {
+    --background: 224 47% 6%;
+    --foreground: 38 30% 95%;
+
+    --card: 224 36% 10%;
+    --card-foreground: 38 30% 95%;
+
+    --popover: 224 40% 8%;
+    --popover-foreground: 38 30% 95%;
+
+    --primary: 24 94% 54%;
+    --primary-foreground: 30 35% 98%;
+    --primary-hover: 22 92% 47%;
+
+    --secondary: 223 32% 13%;
+    --secondary-foreground: 38 30% 92%;
+
+    --success: 145 65% 50%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 145 60% 15%;
+
+    --warning: 38 96% 58%;
+    --warning-foreground: 224 47% 6%;
+    --warning-light: 32 72% 16%;
+
+    --muted: 223 28% 15%;
+    --muted-foreground: 219 18% 68%;
+
+    --accent: 24 72% 17%;
+    --accent-foreground: 26 95% 68%;
+
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 221 24% 20%;
+    --input: 221 24% 20%;
+    --ring: 24 94% 54%;
+
+    --status-pending: 38 96% 58%;
+    --status-verified: 24 94% 54%;
+    --status-delivered: 145 65% 50%;
+
+    --sidebar-background: 224 40% 8%;
+    --sidebar-foreground: 38 30% 95%;
+    --sidebar-primary: 24 94% 54%;
+    --sidebar-primary-foreground: 30 35% 98%;
+    --sidebar-accent: 223 32% 13%;
+    --sidebar-accent-foreground: 38 30% 92%;
+    --sidebar-border: 221 24% 20%;
+    --sidebar-ring: 24 94% 54%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    min-height: 100vh;
+    font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 18% 12%, hsl(24 94% 52% / 0.14), transparent 25rem),
+      radial-gradient(circle at 82% 2%, hsl(215 70% 28% / 0.18), transparent 26rem),
+      linear-gradient(135deg, hsl(224 47% 6%) 0%, hsl(224 42% 7%) 46%, hsl(228 35% 9%) 100%);
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      linear-gradient(hsl(38 30% 94% / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(38 30% 94% / 0.035) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to bottom, black, transparent 82%);
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Playfair Display", Georgia, serif;
+    letter-spacing: -0.035em;
+  }
+
+  /* Smooth transitions for interactive elements */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply transition-all duration-200;
+  }
+
+  /* Card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg;
+  }
+
+  /* Smooth fade in animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  /* Enhanced input focus states */
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply ring-2 ring-primary/50;
+  }
+
+  /* Date input calendar icon visibility - white in light mode, normal in dark mode */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+    opacity: 1;
+  }
+
+  .dark input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0);
+    cursor: pointer;
+    opacity: 1;
+  }
+
+  /* Smooth scale animation for active elements */
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.98);
+    }
+    to {
+      transform: scale(1);
+    }
+  }
+
+  .active\:scale-98:active {
+    transform: scale(0.98);
+  }
+}

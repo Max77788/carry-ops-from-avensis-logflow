@@ -1,0 +1,52 @@
+Driver Communication Template
+Stage 1 – Application Received (Completed)
+Subject: Your Application Has Been Received
+Hi [Driver Name],
+We received your application and everything looks good on our end. You’re now moving to the next step in the process.
+We’ll send you another update once that part is done.
+Thank you,
+Primal Team
+Stage 2 – MVR Check Completed
+Subject: MVR Check Completed
+Hi [Driver Name],
+Your MVR check is complete. Thank you for your patience. You’re now cleared to move to the next step.
+We’ll update you again once the next stage is finished.
+Thank you,
+Primal Team
+Stage 3 – Drug Test Completed
+Subject: Drug Test Completed
+Hi [Driver Name],
+Your drug test results are in and everything is complete. You’re now ready for the final step.
+We’ll reach out again once orientation is scheduled.
+Thank you,
+Primal Team
+Stage 4 – Cleared for Orientation
+Subject: You’re Cleared for Orientation
+Hi [Driver Name],
+You’ve completed all the required steps. Your final step is to meet our superintendent at the yard for orientation.
+We’ll send the time and address shortly.
+Welcome aboard,
+Primal Team
+
+When the Driver is not cleared at any stage
+Stage 1 – Application Not Approved
+Subject: Update on Your Application
+Hi [Driver Name],
+Thanks for applying. After reviewing your information, we’re not able to move forward at this time.
+If anything changes in the future, you’re welcome to apply again.
+Thank you,
+ Avensis Team
+Stage 2 – MVR Not Cleared
+Subject: MVR Review Result
+Hi [Driver Name],
+We completed your MVR review. Based on the results, we’re not able to move forward with your application at this time.
+You’re welcome to reapply in the future if your driving record improves.
+Thank you,
+ Avensis Team
+Stage 3 – Drug Test Not Cleared
+Subject: Drug Test Result
+Hi [Driver Name],
+We received your drug test results. At this time, we’re not able to continue with the hiring process.
+If you complete all required steps in the future and meet DOT standards, you may reapply.
+Thank you,
+ Avensis Team

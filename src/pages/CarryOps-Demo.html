@@ -1,0 +1,2752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carry Ops — Interactive Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1220;--navy2:#111927;--navy3:#162032;--navy4:#1C2A3F;--navy5:#243147;
+  --orange:#F97316;--orange2:#FB923C;--orange-dim:rgba(249,115,22,0.12);--orange-border:rgba(249,115,22,0.25);
+  --blue:#3B82F6;--blue-dim:rgba(59,130,246,0.12);--blue-border:rgba(59,130,246,0.3);
+  --white:#FFFFFF;--g1:#E2E8F0;--g2:#94A3B8;--g3:#64748B;--g4:#334155;
+  --green:#10B981;--green-dim:rgba(16,185,129,0.12);--green-border:rgba(16,185,129,0.3);
+  --amber:#F59E0B;--amber-dim:rgba(245,158,11,0.12);--amber-border:rgba(245,158,11,0.3);
+  --red:#EF4444;--red-dim:rgba(239,68,68,0.12);--red-border:rgba(239,68,68,0.3);
+  --purple:#A855F7;--purple-dim:rgba(168,85,247,0.12);
+  --r:8px;--r2:12px;--r3:16px
+}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+.serif{font-family:'Playfair Display',serif}
+
+/* ── DEMO BANNER ── */
+.demo-banner{background:linear-gradient(90deg,var(--orange) 0%,#fb923c 100%);color:white;text-align:center;padding:8px 16px;font-size:12px;font-weight:500;display:flex;justify-content:center;align-items:center;gap:14px;flex-wrap:wrap}
+.demo-banner .badge{background:rgba(0,0,0,0.25);padding:2px 8px;border-radius:100px;font-size:10px;letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+.demo-banner button{background:rgba(255,255,255,0.18);color:white;border:none;border-radius:6px;padding:4px 12px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit}
+.demo-banner button:hover{background:rgba(255,255,255,0.28)}
+
+/* ── SVG icons ── */
+.ico{display:inline-block;vertical-align:middle;flex-shrink:0}
+
+/* ── ROLE PICKER (login) ── */
+.role-picker{min-height:calc(100vh - 36px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 5%;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(249,115,22,0.08) 0%,transparent 70%)}
+.role-picker-head{text-align:center;margin-bottom:48px;max-width:720px}
+.rp-logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:20px}
+.rp-logo-mark{width:44px;height:44px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.rp-logo-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:600}
+.role-picker h1{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,40px);font-weight:400;line-height:1.15;margin-bottom:12px}
+.role-picker h1 em{font-style:italic;color:var(--orange)}
+.role-picker p{color:var(--g2);font-size:15px;line-height:1.7;max-width:560px;margin:0 auto}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:1100px;width:100%}
+.role-card{background:var(--navy3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r3);padding:22px;cursor:pointer;transition:all .2s;position:relative;text-align:left}
+.role-card:hover{border-color:var(--orange);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.3)}
+.role-card-icon{width:42px;height:42px;border-radius:10px;background:var(--orange-dim);border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.role-card-name{font-size:16px;font-weight:600;margin-bottom:6px}
+.role-card-desc{font-size:12px;color:var(--g2);line-height:1.6}
+.role-card-as{font-size:10px;color:var(--g3);text-transform:uppercase;letter-spacing:.08em;margin-top:10px;font-weight:500}
+.role-card-tag{position:absolute;top:14px;right:14px;font-size:9px;font-weight:600;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em}
+.role-card-tag.new{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,0.3)}
+.role-card-tag.future{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+
+.demo-meta{margin-top:48px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:center;font-size:11px;color:var(--g3)}
+.demo-meta-tag{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:4px 10px}
+
+/* ── APP SHELL ── */
+.app{display:none;min-height:calc(100vh - 36px)}
+.app.active{display:flex;flex-direction:column}
+.topnav{background:var(--navy2);border-bottom:1px solid rgba(255,255,255,0.06);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:36px;z-index:50}
+.topnav-left{display:flex;align-items:center;gap:18px}
+.topnav-brand{display:flex;align-items:center;gap:10px}
+.topnav-logo{width:30px;height:30px;background:var(--orange);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.topnav-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:600}
+.topnav-portal{font-size:11px;color:var(--g3);background:rgba(255,255,255,0.04);padding:3px 10px;border-radius:100px;border:1px solid rgba(255,255,255,0.06);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.topnav-tabs{display:flex;gap:2px;margin-left:24px}
+.topnav-tab{padding:8px 14px;font-size:13px;color:var(--g2);background:transparent;border:none;border-radius:6px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;font-weight:500}
+.topnav-tab:hover{background:rgba(255,255,255,0.04);color:var(--white)}
+.topnav-tab.active{background:var(--blue);color:var(--white)}
+.topnav-right{display:flex;align-items:center;gap:14px}
+.topnav-user{font-size:12px;color:var(--g2);text-align:right;line-height:1.3}
+.topnav-user strong{color:var(--white);font-size:13px;display:block}
+.topnav-out{background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--g1);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px}
+.topnav-out:hover{border-color:var(--orange);color:var(--orange)}
+
+.app-body{flex:1;padding:32px 5% 60px;max-width:1320px;width:100%;margin:0 auto}
+.app-body.narrow{max-width:900px}
+.app-body.full{max-width:none;padding:32px 4% 60px}
+
+.page-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.page-head h1{font-family:'Playfair Display',serif;font-size:32px;font-weight:400;line-height:1.1;margin-bottom:6px}
+.page-head p{color:var(--g2);font-size:13px}
+.page-head-cta{display:flex;gap:8px}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 16px;font-size:13px;font-weight:500;border-radius:7px;cursor:pointer;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:7px;transition:all .15s;text-decoration:none}
+.btn-primary{background:var(--orange);color:white}
+.btn-primary:hover{background:var(--orange2)}
+.btn-blue{background:var(--blue);color:white}
+.btn-blue:hover{filter:brightness(1.1)}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--g1);border:1px solid rgba(255,255,255,0.1)}
+.btn-ghost:hover{background:rgba(255,255,255,0.1)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border)}
+.btn-danger:hover{background:rgba(239,68,68,0.2)}
+.btn-success{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-lg{padding:13px 22px;font-size:14px}
+
+/* ── CARDS, TABLES, BADGES ── */
+.card{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r2);padding:22px}
+.card-tight{padding:16px}
+.card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.card-head h3{font-size:15px;font-weight:600}
+.card-head h3.serif{font-family:'Playfair Display',serif;font-weight:400;font-size:18px}
+
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--navy3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--r2);padding:16px;display:flex;align-items:center;gap:14px}
+.kpi-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.kpi-icon.orange{background:var(--orange-dim);border:1px solid var(--orange-border)}
+.kpi-icon.blue{background:var(--blue-dim);border:1px solid var(--blue-border)}
+.kpi-icon.green{background:var(--green-dim);border:1px solid var(--green-border)}
+.kpi-icon.amber{background:var(--amber-dim);border:1px solid var(--amber-border)}
+.kpi-label{font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;margin-bottom:2px}
+.kpi-val{font-family:'Playfair Display',serif;font-size:24px;font-weight:400;line-height:1}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl thead th{text-align:left;padding:10px 14px;font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;font-weight:500;border-bottom:1px solid rgba(255,255,255,0.06)}
+.tbl tbody td{padding:14px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--g1);vertical-align:middle}
+.tbl tbody tr{cursor:pointer;transition:background .12s}
+.tbl tbody tr:hover{background:rgba(255,255,255,0.02)}
+.tbl tbody tr:last-child td{border-bottom:none}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em}
+.pill .dot{width:5px;height:5px;border-radius:50%}
+.pill.green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.pill.green .dot{background:var(--green)}
+.pill.blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-border)}
+.pill.blue .dot{background:var(--blue)}
+.pill.orange{background:var(--orange-dim);color:var(--orange);border:1px solid var(--orange-border)}
+.pill.orange .dot{background:var(--orange)}
+.pill.amber{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.pill.amber .dot{background:var(--amber)}
+.pill.red{background:var(--red-dim);color:var(--red);border:1px solid var(--red-border)}
+.pill.red .dot{background:var(--red)}
+.pill.gray{background:rgba(148,163,184,0.1);color:var(--g2);border:1px solid rgba(148,163,184,0.18)}
+.pill.gray .dot{background:var(--g3)}
+.pill-live .dot{animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── FORMS ── */
+.f-grp{margin-bottom:14px}
+.f-lbl{display:block;font-size:11px;color:var(--g2);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.f-in,.f-sel,.f-ta{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:7px;padding:10px 12px;font-size:13px;color:var(--white);font-family:inherit;outline:none;transition:border-color .12s}
+.f-in:focus,.f-sel:focus,.f-ta:focus{border-color:var(--orange)}
+.f-in::placeholder{color:var(--g3)}
+.f-sel{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'/%3e%3c/svg%3e");background-position:right 10px center;background-repeat:no-repeat;background-size:14px;padding-right:34px}
+.f-sel option{background:var(--navy3)}
+.f-ta{resize:vertical;min-height:80px;font-family:inherit}
+.f-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.f-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* ── PROGRESS TRACKER (carrier onboarding) ── */
+.prog-wrap{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin:8px 0 14px;flex-wrap:nowrap;overflow-x:auto;padding:6px 0}
+.prog-step{flex:1;min-width:96px;text-align:center;position:relative}
+.prog-step:not(:last-child)::after{content:'';position:absolute;top:18px;left:calc(50% + 18px);right:calc(-50% + 18px);height:2px;background:rgba(255,255,255,0.08)}
+.prog-step.done:not(:last-child)::after{background:var(--green)}
+.prog-circle{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;background:var(--navy3);position:relative;z-index:1}
+.prog-step.done .prog-circle{background:var(--green-dim);border-color:var(--green)}
+.prog-step.active .prog-circle{background:var(--orange-dim);border-color:var(--orange);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(249,115,22,0.4)}50%{box-shadow:0 0 0 6px rgba(249,115,22,0)}}
+.prog-name{font-size:11px;color:var(--g2);margin-bottom:3px;font-weight:500}
+.prog-step.done .prog-name,.prog-step.active .prog-name{color:var(--white)}
+.prog-status{font-size:9px;color:var(--g3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.prog-status.complete{color:var(--green)}
+.prog-status.pending{color:var(--orange)}
+
+/* ── BID MOCKUP (Driver magic link, signature, etc.) ── */
+.phone{max-width:340px;margin:0 auto;background:var(--navy3);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:14px;box-shadow:0 24px 60px rgba(0,0,0,0.5)}
+.phone-bar{display:flex;justify-content:space-between;align-items:center;padding:0 6px 10px;font-size:10px;color:var(--g3);font-weight:600}
+.phone-screen{background:var(--navy);border-radius:14px;padding:18px;min-height:520px}
+.signature-pad{background:var(--white);border-radius:8px;height:120px;display:flex;align-items:center;justify-content:center;color:var(--g3);font-size:11px;font-style:italic;cursor:crosshair;position:relative;overflow:hidden}
+.signature-pad canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:8px}
+.signature-pad.signed{color:var(--g4)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;border-bottom:1px solid rgba(255,255,255,0.06);margin-bottom:20px}
+.tab{padding:11px 16px;font-size:13px;color:var(--g2);background:transparent;border:none;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;font-weight:500;transition:all .12s;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--white)}
+.tab.active{color:var(--white);border-bottom-color:var(--orange)}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--navy2);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r3);max-width:640px;width:100%;max-height:90vh;overflow-y:auto;padding:28px;animation:fadeUp .2s ease}
+.modal h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin-bottom:6px}
+.modal-sub{color:var(--g2);font-size:13px;margin-bottom:20px}
+.modal-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;cursor:pointer;color:var(--g2);font-size:16px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:rgba(255,255,255,0.1);color:var(--white)}
+.modal{position:relative}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--navy4);border:1px solid var(--orange-border);border-radius:7px;padding:10px 16px;font-size:13px;display:flex;align-items:center;gap:10px;box-shadow:0 12px 32px rgba(0,0,0,0.4);z-index:300;opacity:0;transition:all .25s}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── MISC ── */
+.row{display:flex;align-items:center;gap:10px}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.col{display:flex;flex-direction:column;gap:6px}
+.muted{color:var(--g3)}
+.small{font-size:11px}
+.tiny{font-size:10px}
+.gap-8{gap:8px}.gap-16{gap:16px}.gap-24{gap:24px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}.mb-24{margin-bottom:24px}
+.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-24{margin-top:24px}
+.flex{display:flex}.flex-1{flex:1}.flex-col{flex-direction:column}
+.grid{display:grid}
+.text-right{text-align:right}.text-center{text-align:center}
+.bold{font-weight:600}
+.label{font-size:10px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+.value{font-size:14px;color:var(--white);font-weight:500}
+.value.lg{font-size:18px}
+.divider{height:1px;background:rgba(255,255,255,0.06);margin:14px 0}
+.section-block{padding:18px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.section-block:last-child{border-bottom:none}
+
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}
+.detail-grid.two{grid-template-columns:2fr 1fr}
+.detail-item{margin-bottom:16px}
+.detail-item .label{margin-bottom:4px}
+
+.empty{padding:48px 20px;text-align:center;color:var(--g3)}
+.empty-icon{width:48px;height:48px;margin:0 auto 12px;opacity:.4}
+
+/* ── TOGGLE ── */
+.toggle{position:relative;width:38px;height:22px;background:rgba(255,255,255,0.1);border-radius:100px;cursor:pointer;flex-shrink:0;transition:background .15s}
+.toggle.on{background:var(--green)}
+.toggle.disabled{opacity:.4;cursor:not-allowed}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:white;transition:left .15s}
+.toggle.on::after{left:18px}
+
+/* ── ROLE SWITCHER (floating) ── */
+.role-switcher{position:fixed;bottom:24px;right:24px;background:var(--navy4);border:1px solid var(--orange-border);border-radius:100px;padding:8px 6px 8px 16px;display:flex;align-items:center;gap:10px;font-size:12px;z-index:80;box-shadow:0 12px 32px rgba(0,0,0,0.4)}
+.role-switcher button{background:var(--orange);color:white;border:none;border-radius:100px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit}
+.role-switcher button:hover{background:var(--orange2)}
+
+/* responsive */
+@media (max-width:900px){
+  .topnav{padding:0 12px;flex-wrap:wrap;height:auto;padding:8px 12px;gap:8px}
+  .topnav-tabs{order:3;width:100%;overflow-x:auto;padding:6px 0}
+  .topnav-right{margin-left:auto}
+  .app-body{padding:20px 4% 40px}
+  .detail-grid,.detail-grid.two{grid-template-columns:1fr}
+  .f-row-2,.f-row-3,.f-row-4{grid-template-columns:1fr}
+  .role-switcher{bottom:14px;right:14px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<!-- ─────── SVG ICON LIBRARY ─────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <symbol id="i-logo" viewBox="0 0 24 24"><g fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M5 7h14M5 12h10M5 17h6"/></g></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17V7a1 1 0 0 1 1-1h11v11"/><path d="M14 9h4l3 4v4h-7"/><circle cx="6.5" cy="17.5" r="2"/><circle cx="17" cy="17.5" r="2"/></g></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h2M13 8h2M9 12h2M13 12h2M9 16h2M13 16h2"/></g></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></g></symbol>
+  <symbol id="i-gavel" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6"/><path d="M11 7l6 6"/><path d="M9 9l6 6-3 3-6-6z"/><path d="M5 21h10"/></g></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L4 5v7c0 4.5 3.2 8.5 8 10 4.8-1.5 8-5.5 8-10V5l-8-3z"/><path d="M9 12l2 2 4-4"/></g></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></g></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10M10 21V4M16 21v-7M4 21h18"/></g></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 12 10 17 19 7"/></g></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></g></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></g></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></g></symbol>
+  <symbol id="i-arrow-right" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></g></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 5l-7 7 7 7"/></g></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></g></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></g></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></g></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18l2-1.5L10 21l2-1.5L14 21l2-1.5L18 21V3z"/><path d="M9 8h6M9 12h6M9 16h4"/></g></symbol>
+  <symbol id="i-package" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8l-9-5-9 5v8l9 5z"/><path d="M3 8l9 5 9-5M12 13v10"/></g></symbol>
+  <symbol id="i-clipboard" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9 12.5l2 2 4-4"/></g></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 13a4 4 0 0 0 5.6.6l3-3a4 4 0 0 0-5.6-5.6l-1.7 1.7"/><path d="M14 11a4 4 0 0 0-5.6-.6l-3 3a4 4 0 0 0 5.6 5.6l1.7-1.7"/></g></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4z"/></g></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></g></symbol>
+  <symbol id="i-warehouse" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V8l9-5 9 5v13"/><path d="M7 21v-9h10v9"/><path d="M9 16h6M9 19h6"/></g></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></g></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></g></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></g></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5M12 3v13"/></g></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V2"/></g></symbol>
+</defs>
+</svg>
+
+<!-- ─────── DEMO BANNER ─────── -->
+<div class="demo-banner">
+  <span class="badge">Demo</span>
+  <span>Carry Ops · Interactive prototype with seed data — every action is reactive but local</span>
+  <button onclick="resetDemo()">Reset demo</button>
+</div>
+
+<!-- ─────── ROLE PICKER (login screen) ─────── -->
+<section class="role-picker" id="rolePicker">
+  <div class="role-picker-head">
+    <div class="rp-logo">
+      <div class="rp-logo-mark"><svg class="ico" width="22" height="22"><use href="#i-logo"/></svg></div>
+      <div class="rp-logo-name">Carry Ops</div>
+    </div>
+    <h1>Pick a <em>role</em> to walk through the platform.</h1>
+    <p>This is a working prototype — pick any role to see what that user actually experiences. State is shared across roles. Post a load as the shipper, then switch to the carrier to bid on it.</p>
+  </div>
+
+  <div class="role-grid">
+    <div class="role-card" onclick="openAppRoute('/shipper/login')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-building"/></svg></div>
+      <div class="role-card-name">Shipper</div>
+      <div class="role-card-desc">Post loads, invite carriers, run the bid board, award based on safety + capability + price + consistency.</div>
+      <div class="role-card-as">Login as: Test Shipper · Acme Materials</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/carrier/login')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-truck"/></svg></div>
+      <div class="role-card-name">Carrier</div>
+      <div class="role-card-desc">View invitations, submit bids, manage your fleet and drivers, see awarded loads.</div>
+      <div class="role-card-as">Login as: Lone Star Hauling LLC</div>
+      <div class="role-card-tag new">New</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/driver/login')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-user"/></svg></div>
+      <div class="role-card-name">Driver — Platform</div>
+      <div class="role-card-desc">Employed driver. Full compliance tracked. Start shift, pre-trip inspection, then run loads.</div>
+      <div class="role-card-as">Login as: Marco Garcia · CDL on file</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/driver/login')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-link"/></svg></div>
+      <div class="role-card-name">Driver — Magic Link Only</div>
+      <div class="role-card-desc">Third-party driver hired by a carrier. Just got a text. Tap link, follow route, sign.</div>
+      <div class="role-card-as">Login as: Pete Kowalski · Bayou Belly Dumps</div>
+      <div class="role-card-tag new">Compare</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/scale-house')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-warehouse"/></svg></div>
+      <div class="role-card-name">Scalehouse</div>
+      <div class="role-card-desc">See trucks coming in, generate tickets, send magic links to driver and destination attendant.</div>
+      <div class="role-card-as">Login as: Primal Materials Pickup Pit</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/contractor/login')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-flag"/></svg></div>
+      <div class="role-card-name">Destination Attendant</div>
+      <div class="role-card-desc">Receive ticket links from active loads. Verify weight. Sign off on delivery.</div>
+      <div class="role-card-as">Login as: Kiewit Site Attendant</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/vendor/login')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-receipt"/></svg></div>
+      <div class="role-card-name">Vendor Portal (Carrier-side)</div>
+      <div class="role-card-desc">Carrier's own profile, ticket history, fleet, drivers, CSV export.</div>
+      <div class="role-card-as">Login as: 4HR Trucking</div>
+    </div>
+    <div class="role-card" onclick="openAppRoute('/admin/dashboard')">
+      <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-cog"/></svg></div>
+      <div class="role-card-name">Platform Admin</div>
+      <div class="role-card-desc">Manage carrier companies, fleet compliance, sites, bidding rules. Module toggles per workspace.</div>
+      <div class="role-card-as">Login as: Platform Admin</div>
+    </div>
+  </div>
+
+  <div class="demo-meta">
+    <span class="demo-meta-tag">8 roles · 18+ screens · all wired together</span>
+    <span class="demo-meta-tag">Shipper portal → Carrier portal → Driver shift → Inspection → Scalehouse → Destination → Invoice</span>
+  </div>
+</section>
+
+<!-- ─────── APP SHELL (wraps every role's screens) ─────── -->
+<div class="app" id="app">
+  <nav class="topnav">
+    <div class="topnav-left">
+      <div class="topnav-brand">
+        <div class="topnav-logo"><svg class="ico" width="16" height="16"><use href="#i-logo"/></svg></div>
+        <div class="topnav-name">Carry Ops</div>
+      </div>
+      <div class="topnav-portal" id="topnavPortal">Shipper Portal</div>
+      <div class="topnav-tabs" id="topnavTabs"></div>
+    </div>
+    <div class="topnav-right">
+      <div class="topnav-user" id="topnavUser">
+        <strong>Test Shipper</strong>
+        <span>Acme Materials</span>
+      </div>
+      <button class="topnav-out" onclick="signOut()">
+        <svg class="ico" width="14" height="14"><use href="#i-out"/></svg>
+        Sign out
+      </button>
+    </div>
+  </nav>
+  <div id="appContent"></div>
+</div>
+
+<!-- floating role switcher -->
+<div class="role-switcher" id="roleSwitcher" style="display:none">
+  <span class="muted">Demo:</span>
+  <button onclick="signOut()">Switch role</button>
+</div>
+
+<!-- modal container -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- toast -->
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   SEED DATA — single source of truth, all roles read from this
+   ═══════════════════════════════════════════════════════════════════════ */
+const SEED = {
+  workspace: {
+    name: 'Acme Materials',
+    tier: 'Standard',
+    /* Pricing model: 3 parts
+       1. Base platform fee (flat monthly) — always charged
+       2. Per-load fee ($2/load) — charged on every load processed (including magic-link)
+       3. Modular add-ons — only charged when toggled on */
+    pricing: {
+      basePlatformFee: 1500,         /* per month */
+      perLoadFee: 2,                  /* per load processed */
+      loadsThisMonth: 387             /* simulated current usage */
+    },
+    modules: {
+      /* Core: included in base platform fee, locked on */
+      carrierOnboarding: {on:true, locked:true, name:'Carrier Onboarding', tier:'core', price:0, priceLabel:'Included'},
+      eTicketing: {on:true, locked:true, name:'Digital E-Ticketing', tier:'core', price:0, priceLabel:'Included'},
+      bidBoard: {on:true, locked:true, name:'Private Bid Board', tier:'core', price:0, priceLabel:'Included'},
+      analytics: {on:true, locked:true, name:'Operations Analytics', tier:'core', price:0, priceLabel:'Included'},
+      /* Add-ons: priced individually, customer toggles on/off */
+      driverOnboarding: {on:true, locked:false, name:'Driver Onboarding & Assessment', tier:'addon', price:400, priceLabel:'+$400 / mo'},
+      complianceGuard: {on:false, locked:false, name:'Compliance Guard (DVIR)', tier:'addon', price:300, priceLabel:'+$300 / mo'},
+      aiReceptionist: {on:true, locked:false, name:'AI Receptionist (EN/ES)', tier:'addon', price:500, priceLabel:'+$500 / mo'},
+      cashflow: {on:false, locked:false, name:'CashFlow Accelerator (Bank Tie-In)', tier:'addon', price:750, priceLabel:'+$750 / mo'},
+      /* Coming soon: not yet available */
+      driverRetention: {on:false, locked:false, name:'Driver Retention System', tier:'addon', price:0, priceLabel:'Coming soon', soon:true},
+      uptimeOptimizer: {on:false, locked:false, name:'Uptime Optimizer', tier:'addon', price:0, priceLabel:'Coming soon', soon:true},
+      planning: {on:false, locked:false, name:'Planning & Forecasting', tier:'addon', price:0, priceLabel:'Coming soon', soon:true},
+      customAnalytics: {on:false, locked:false, name:'Custom Analytics', tier:'addon', price:0, priceLabel:'Coming soon', soon:true}
+    }
+  },
+  carriers: [
+    {id:'c1', name:'Lone Star Hauling LLC', mc:'1016914', dot:'3215851', city:'Houston, TX', status:'Active', primary:'Bill Khan', email:'bkhan@lonestar.com', phone:'(713) 555-0142', insurance:'Active', w9:true, dotRating:'Satisfactory', trucks:14, drivers:18, onTime:98, disputes:0, completion:99, safetyScore:98, agreement:true, contacts:1, fleet:14, trailers:8, driversComplete:true, portalAccess:true, joined:'2025-08-12', verified:true},
+    {id:'c2', name:'Bayou Belly Dumps', mc:'1410138', dot:'3860546', city:'Beaumont, TX', status:'Active', primary:'Perla Carroll', email:'perla@bayoubd.com', phone:'(409) 555-0188', insurance:'Active', w9:true, dotRating:'Satisfactory', trucks:9, drivers:12, onTime:94, disputes:1, completion:96, safetyScore:91, agreement:true, contacts:1, fleet:9, trailers:5, driversComplete:true, portalAccess:true, joined:'2025-09-04', verified:true},
+    {id:'c3', name:'Coastal Aggregate Co.', mc:'1234568', dot:'3835180', city:'Galveston, TX', status:'Active', primary:'Harold Brown', email:'hbrown@coastalagg.com', phone:'(281) 555-0220', insurance:'Active', w9:true, dotRating:'Satisfactory', trucks:11, drivers:14, onTime:91, disputes:2, completion:93, safetyScore:87, agreement:true, contacts:1, fleet:11, trailers:6, driversComplete:true, portalAccess:true, joined:'2025-09-22', verified:true},
+    {id:'c4', name:'Rio Grande Carriers', mc:'4302144', dot:'4302144', city:'McAllen, TX', status:'Active', primary:'Edward Pittman', email:'ed@riograndecarrier.com', phone:'(956) 555-0177', insurance:'Active', w9:true, dotRating:'Conditional', trucks:6, drivers:8, onTime:88, disputes:3, completion:90, safetyScore:78, agreement:true, contacts:1, fleet:6, trailers:3, driversComplete:true, portalAccess:true, joined:'2025-10-14', verified:true},
+    {id:'c5', name:'4HR Trucking', mc:'43234', dot:'4223', city:'Reykjavik, IS', status:'Active', primary:'Max Mat', email:'mmatronin@gmail.com', phone:'—', insurance:'Active', w9:true, dotRating:'Satisfactory', trucks:5, drivers:6, onTime:92, disputes:1, completion:95, safetyScore:88, agreement:true, contacts:1, fleet:5, trailers:2, driversComplete:true, portalAccess:true, joined:'2025-11-02', verified:true},
+    {id:'c6', name:'H & L Legacy Trucking LLC', mc:'2891007', dot:'4108221', city:'Houston, TX', status:'Onboarding Submitted', primary:'Jeffrey Hunter', email:'hunterjn84@gmail.com', phone:'(832) 555-0904', insurance:'Active', w9:true, dotRating:'Pending', trucks:3, drivers:4, onTime:0, disputes:0, completion:0, safetyScore:0, agreement:true, contacts:1, fleet:3, trailers:1, driversComplete:true, portalAccess:false, joined:'2026-04-18', verified:false},
+    {id:'c7', name:'Araes Transportation LLC', mc:'—', dot:'—', city:'Dallas, TX', status:'Onboarding Invited', primary:'—', email:'araestransportllc@yahoo.com', phone:'—', insurance:'Pending', w9:false, dotRating:'Pending', trucks:0, drivers:0, onTime:0, disputes:0, completion:0, safetyScore:0, agreement:false, contacts:0, fleet:0, trailers:0, driversComplete:false, portalAccess:false, joined:'2026-04-22', verified:false},
+    {id:'c8', name:'Ball Farms', mc:'—', dot:'—', city:'Conroe, TX', status:'Onboarding In Progress', primary:'Larry Lytle', email:'lhlcotton@gmail.com', phone:'—', insurance:'Active', w9:false, dotRating:'Pending', trucks:2, drivers:0, onTime:0, disputes:0, completion:0, safetyScore:0, agreement:true, contacts:1, fleet:2, trailers:0, driversComplete:false, portalAccess:false, joined:'2026-04-19', verified:false},
+    {id:'c9', name:'George Washington King Jr', mc:'—', dot:'—', city:'Houston, TX', status:'Suspended', primary:'George King', email:'gking_44@yahoo.com', phone:'(713) 555-0501', insurance:'Expired', w9:true, dotRating:'Conditional', trucks:2, drivers:2, onTime:72, disputes:5, completion:78, safetyScore:54, agreement:true, contacts:1, fleet:2, trailers:1, driversComplete:true, portalAccess:false, joined:'2025-06-11', verified:false}
+  ],
+  loads: [
+    {id:'LD-9C27F389', origin:'1500 Industrial Blvd, Houston, TX', dest:'2200 Commerce St, Dallas, TX', distance:'240 mi', equipment:'Belly Dump', commodity:'Aggregate (3/4" stone)', pickup:'2026-04-26', delivery:'2026-04-28', weight:'26 tons / load', loadCount:'12 loads / day × 14 days', target:1850, hazmat:false, notes:'Tarps required. Driver assist on load. Pickup window 6am-3pm.', status:'Open', mode:'Open Bid', deadline:'2026-04-25 21:00', invited:['c1','c2','c3','c4'], bids:[
+      {carrierId:'c1', amount:1840, perTon:'$11.40 / ton', submittedAt:'2026-04-25 14:32', notes:'Available immediately. Dedicated 4 trucks for the duration.'},
+      {carrierId:'c2', amount:1810, perTon:'$11.10 / ton', submittedAt:'2026-04-25 15:14', notes:'Can run 3 trucks daily.'},
+      {carrierId:'c3', amount:1795, perTon:'$10.85 / ton', submittedAt:'2026-04-25 16:02', notes:''},
+      {carrierId:'c4', amount:1780, perTon:'$10.50 / ton', submittedAt:'2026-04-25 17:48', notes:'Available starting Apr 27.'}
+    ]},
+    {id:'LD-71FC13F1', origin:'500 Pine St, Houston, TX', dest:'2200 Commerce St, Dallas, TX', distance:'240 mi', equipment:'Flatbed', commodity:'Steel pipe', pickup:'2026-04-22', delivery:'2026-04-24', weight:'44,000 lbs', loadCount:'1 load', target:0, hazmat:false, notes:'Tarps required. Driver assist on load.', status:'Cancelled', mode:'Open Bid', deadline:'2026-04-21 18:00', invited:['c1','c2'], bids:[]},
+    {id:'LD-A2D81E4B', origin:'1500 Industrial Blvd, Houston, TX', dest:'4400 Refinery Rd, Beaumont, TX', distance:'88 mi', equipment:'End Dump', commodity:'Frac sand', pickup:'2026-04-30', delivery:'2026-05-14', weight:'24 tons / load', loadCount:'8 loads / day × 14 days', target:920, hazmat:false, notes:'Hard hat & FR clothing required onsite. PPE check at gate.', status:'Open', mode:'Set Rate', setRate:920, deadline:'2026-04-26 18:00', invited:['c1','c2','c3'], bids:[
+      {carrierId:'c1', amount:920, perTon:'$11.50 / ton', submittedAt:'2026-04-25 11:08', notes:'Accepted set rate.', accepted:true}
+    ]},
+    {id:'LD-58B4A7C2', origin:'Primal Materials Pickup Pit, Houston, TX', dest:'Kiewit Site, Conroe, TX', distance:'42 mi', equipment:'Belly Dump', commodity:'Crushed limestone', pickup:'2026-04-25', delivery:'2026-04-25', weight:'24-26 tons / load', loadCount:'Active — running today', target:680, hazmat:false, notes:'Active hauling — see scalehouse for ticket activation.', status:'In Progress', mode:'Awarded', awardedTo:'c1', deadline:'', invited:['c1','c2','c3','c4'], bids:[
+      {carrierId:'c1', amount:680, perTon:'$11.30 / ton', submittedAt:'2026-04-23 09:12', notes:'', winner:true}
+    ]}
+  ],
+  drivers: [
+    /* PLATFORM drivers — full compliance tracked by Carry Ops */
+    {id:'d1', type:'platform', name:'Marco Garcia', phone:'+1 (713) 555-0188', carrierId:'c1', cdl:'TX 18472910', cdlExpires:'2027-09-12', medical:'Valid · Exp 2027-03-15', medicalExpires:'2027-03-15', ssn:'***-**-4421', mvr:'Clean · Reviewed 2025-10-04', drugTest:'Passed · 2025-10-08', drugTestExpires:'2026-10-08', orientation:'Completed · 2025-10-12', training:'Completed', status:'Active', language:'Español', truckId:'001', complianceScore:96, lastInspection:'2026-04-25 06:42'},
+    {id:'d3', type:'platform', name:'Carlos Mendez', phone:'+1 (956) 555-0921', carrierId:'c4', cdl:'TX 19283746', cdlExpires:'2026-08-04', medical:'Valid', medicalExpires:'2026-05-02', ssn:'***-**-7710', mvr:'Clean', drugTest:'Passed', drugTestExpires:'2026-12-15', orientation:'Completed', training:'Completed', status:'Active', language:'Español', truckId:'04', complianceScore:91, lastInspection:'2026-04-24 06:18'},
+    {id:'d4', type:'platform', name:'Tom Henderson', phone:'+1 (281) 555-0440', carrierId:'c3', cdl:'TX 33829471', cdlExpires:'2028-01-22', medical:'Valid', medicalExpires:'2027-06-15', ssn:'***-**-2284', mvr:'1 incident', drugTest:'Passed', drugTestExpires:'2027-02-08', orientation:'Completed', training:'Completed', status:'Active', language:'English', truckId:'07', complianceScore:84, lastInspection:'2026-04-25 06:55'},
+    /* MAGIC-LINK drivers — phone only, carrier-managed, not our compliance responsibility */
+    {id:'m1', type:'magic_link', name:'Jose Ramirez', phone:'+1 (956) 555-3340', carrierId:'c4', loadsRun:7, lastUsed:'2026-04-22'},
+    {id:'m2', type:'magic_link', name:'Pete Kowalski', phone:'+1 (713) 555-7821', carrierId:'c2', loadsRun:12, lastUsed:'2026-04-24'},
+    {id:'m3', type:'magic_link', name:null, phone:'+1 (281) 555-9012', carrierId:'c3', loadsRun:1, lastUsed:'2026-04-25'}
+  ],
+  trucks: [
+    {id:'001', carrierId:'c1', driverId:'d1', status:'Available', plate:'TX-LSH-001'},
+    {id:'016', carrierId:'c4', driverId:null, status:'Available', plate:'TX-RGC-016'},
+    {id:'01CT', carrierId:'c5', driverId:null, status:'Available', plate:'TX-4HR-1CT'},
+    {id:'04', carrierId:'c4', driverId:'d3', status:'Delivering', plate:'TX-RGC-004'},
+    {id:'05', carrierId:'c1', driverId:null, status:'Available', plate:'TX-LSH-005'},
+    {id:'050', carrierId:'c1', driverId:null, status:'Available', plate:'TX-LSH-050'},
+    {id:'07', carrierId:'c3', driverId:'d4', status:'Available', plate:'TX-CAG-007'},
+    {id:'10', carrierId:'c1', driverId:null, status:'Available', plate:'TX-LSH-010'},
+    {id:'110', carrierId:'c2', driverId:null, status:'Available', plate:'TX-BBD-110'}
+  ],
+  tickets: [
+    {id:'T-2026-0418', loadId:'LD-58B4A7C2', truckId:'001', driverId:'d1', carrierId:'c1', pickup:'Primal Materials Pickup Pit', dest:'Kiewit Site', netWeight:24.2, status:'Delivered', createdAt:'2026-04-25 07:42', deliveredAt:'2026-04-25 09:18', driverSigned:true, attendantSigned:true, attendantName:'Bobby Mitchell', photos:2},
+    {id:'T-2026-0419', loadId:'LD-58B4A7C2', truckId:'001', driverId:'d1', carrierId:'c1', pickup:'Primal Materials Pickup Pit', dest:'Kiewit Site', netWeight:25.6, status:'Delivered', createdAt:'2026-04-25 09:51', deliveredAt:'2026-04-25 11:24', driverSigned:true, attendantSigned:true, attendantName:'Bobby Mitchell', photos:1},
+    {id:'T-2026-0420', loadId:'LD-58B4A7C2', truckId:'001', driverId:'d1', carrierId:'c1', pickup:'Primal Materials Pickup Pit', dest:'Kiewit Site', netWeight:26.1, status:'In Transit', createdAt:'2026-04-25 12:15', deliveredAt:null, driverSigned:false, attendantSigned:false, attendantName:null, photos:0},
+    {id:'T-2026-0421', loadId:'LD-58B4A7C2', truckId:'05', driverId:null, carrierId:'c1', pickup:'Primal Materials Pickup Pit', dest:'Kiewit Site', netWeight:0, status:'Activated', createdAt:'2026-04-25 13:02', deliveredAt:null, driverSigned:false, attendantSigned:false, attendantName:null, photos:0}
+  ],
+  pickupSites: [
+    {id:'p1', name:'Primal Materials Pickup Pit', address:'1500 Industrial Blvd, Houston, TX'},
+    {id:'p2', name:'Avensis Yard 4', address:'4400 Refinery Rd, Beaumont, TX'}
+  ],
+  destSites: [
+    {id:'ds1', name:'Kiewit Site', address:'2200 Conroe Park, Conroe, TX', attendant:'Bobby Mitchell'},
+    {id:'ds2', name:'2200 Commerce St', address:'Dallas, TX', attendant:'—'}
+  ],
+  notifications: {
+    carrier_c1: [
+      {id:'n1', type:'invitation', loadId:'LD-9C27F389', message:'New bid invitation: Aggregate Haul Houston→Dallas', time:'14h ago', read:false},
+      {id:'n2', type:'award', loadId:'LD-58B4A7C2', message:'Load awarded: Crushed limestone Houston→Conroe', time:'2d ago', read:true},
+      {id:'n3', type:'invitation', loadId:'LD-A2D81E4B', message:'Set-rate offer: Frac sand Houston→Beaumont', time:'4d ago', read:true}
+    ]
+  },
+  expirations: [
+    {carrierId:'c4', type:'Insurance Certificate', daysLeft:18, severity:'amber'},
+    {carrierId:'c2', type:'Driver Medical Card (Carlos M.)', daysLeft:7, severity:'red'},
+    {carrierId:'c3', type:'W-9 (annual review)', daysLeft:42, severity:'green'},
+    {carrierId:'c1', type:'COI renewal', daysLeft:91, severity:'green'}
+  ],
+  /* Driver pipeline — for Driver Onboarding & Assessment module */
+  driverCandidates: [
+    {id:'dc1', name:'Ben Singh', phone:'+1 (713) 471-8926', email:'singh.benny@gmail.com', stage:'Initial Connect', status:'Contacted', source:'Meta', yard:'Carrizo', position:'Employee', applied:'2026-04-16', language:'English', docs:{cdl:false,medical:false,ssn:false}, mvr:'Not started', drugTest:'Not started', orientation:'Not scheduled',
+     timeline:[{action:'Initial verification call completed - CONTACTED', type:'INITIAL_VERIFICATION', time:'Apr 16, 5:08 PM'},{action:'Status changed: NEW → CONTACTED', type:'STATUS_CHANGE', time:'Apr 16, 5:07 PM'},{action:'New driver lead created', type:'LEAD_CREATED', time:'Apr 16, 5:01 PM'}]},
+    {id:'dc2', name:'Maria Rodriguez', phone:'+1 (956) 555-0421', email:'maria.rod@gmail.com', stage:'Documents', status:'Application Submitted', source:'Indeed', yard:'Carrizo', position:'Owner Operator', applied:'2026-04-12', language:'Español', docs:{cdl:true,medical:true,ssn:false}, mvr:'Not started', drugTest:'Not started', orientation:'Not scheduled',
+     timeline:[{action:'Application submitted', type:'APPLICATION', time:'Apr 14, 10:22 AM'},{action:'Initial call completed', type:'INITIAL_VERIFICATION', time:'Apr 13, 2:14 PM'},{action:'New driver lead created', type:'LEAD_CREATED', time:'Apr 12, 11:30 AM'}]},
+    {id:'dc3', name:'James Hutchins', phone:'+1 (281) 555-0117', email:'jhutch@yahoo.com', stage:'MVR Record', status:'In Review', source:'Meta', yard:'Houston Yard', position:'Employee', applied:'2026-04-08', language:'English', docs:{cdl:true,medical:true,ssn:true}, mvr:'Pending', drugTest:'Not started', orientation:'Not scheduled',
+     timeline:[{action:'Documents uploaded', type:'DOCUMENTS', time:'Apr 10, 9:14 AM'},{action:'Application submitted', type:'APPLICATION', time:'Apr 9, 4:02 PM'},{action:'Initial call completed', type:'INITIAL_VERIFICATION', time:'Apr 9, 11:18 AM'},{action:'New driver lead created', type:'LEAD_CREATED', time:'Apr 8, 3:45 PM'}]},
+    {id:'dc4', name:'Reggie Boyd', phone:'+1 (713) 555-0998', email:'rboyd@hotmail.com', stage:'Drug Test', status:'In Progress', source:'Referral', yard:'Carrizo', position:'Employee', applied:'2026-04-05', language:'English', docs:{cdl:true,medical:true,ssn:true}, mvr:'Clean · Reviewed Apr 14', drugTest:'Pending · 4 days left', orientation:'Not scheduled',
+     timeline:[{action:'MVR cleared', type:'MVR', time:'Apr 14, 8:30 AM'},{action:'Documents complete', type:'DOCUMENTS', time:'Apr 11, 1:22 PM'},{action:'Application submitted', type:'APPLICATION', time:'Apr 7, 10:08 AM'},{action:'New driver lead created', type:'LEAD_CREATED', time:'Apr 5, 9:15 AM'}]},
+    {id:'dc5', name:'Linda Park', phone:'+1 (832) 555-0220', email:'lpark@gmail.com', stage:'Orientation', status:'Scheduled · Tue 9 AM', source:'Meta', yard:'Houston Yard', position:'Employee', applied:'2026-03-28', language:'English', docs:{cdl:true,medical:true,ssn:true}, mvr:'Clean', drugTest:'Passed · Apr 18', orientation:'Scheduled · Apr 30',
+     timeline:[{action:'Drug test passed', type:'DRUG_TEST', time:'Apr 18, 10:00 AM'},{action:'MVR cleared', type:'MVR', time:'Apr 8, 11:00 AM'},{action:'Documents complete', type:'DOCUMENTS', time:'Apr 3, 2:18 PM'}]}
+  ],
+  /* AI Receptionist call log */
+  aiCalls: [
+    {id:'ac1', candidateId:'dc1', direction:'outbound', purpose:'Initial verification', duration:'2m 14s', outcome:'Connected', summary:'Confirmed interest. Sent application link via SMS in English.', transcript:'AI: Hello, this is Sarah from Carry Ops calling on behalf of Avensis. Am I speaking with Ben?\nDriver: Yes, this is Ben.\nAI: Great. I see you applied for a driver position. Do you have a moment to confirm a few things?\nDriver: Sure.\nAI: Are you a CDL Class A holder?\nDriver: Yes ma\'am.\nAI: Perfect. I\'ll text you the application link right after this call. Any questions on pay or schedule?', time:'Apr 16, 5:08 PM'},
+    {id:'ac2', candidateId:'dc2', direction:'outbound', purpose:'Document reminder', duration:'1m 42s', outcome:'Connected', summary:'Reminded about missing SSN document. Driver said will upload tonight.', transcript:'AI: Hola Maria, soy Sarah de Carry Ops...\nDriver: Sí, hola.\nAI: Vi que faltan algunos documentos en su aplicación...', time:'Apr 19, 11:14 AM'},
+    {id:'ac3', candidateId:'dc4', direction:'outbound', purpose:'Drug test reminder', duration:'1m 08s', outcome:'Voicemail', summary:'Left voicemail. Drug test deadline in 4 days. Sent SMS follow-up.', transcript:'[Voicemail recording] Hi Reggie, this is Sarah from Carry Ops. Just a reminder that your drug test needs to be completed by Tuesday...', time:'Apr 22, 3:30 PM'},
+    {id:'ac4', candidateId:null, direction:'inbound', purpose:'General inquiry', duration:'3m 22s', outcome:'Connected', summary:'Driver called about pay and schedule. Forwarded application link.', transcript:'Driver: Hi, I saw the ad for drivers.\nAI: Hi there! Glad you called. Are you a CDL holder?\nDriver: Yeah, Class A, 8 years experience.\nAI: Perfect. Let me get you started...', time:'Apr 23, 10:18 AM'},
+    {id:'ac5', candidateId:'dc5', direction:'outbound', purpose:'Orientation reminder', duration:'0m 58s', outcome:'Connected', summary:'Confirmed orientation Tuesday 9 AM at Houston Yard.', transcript:'AI: Hi Linda, just confirming your orientation Tuesday at 9 AM...\nDriver: Yes, I\'ll be there.', time:'Apr 24, 2:00 PM'}
+  ],
+  /* Pre-trip inspection sections — used by Compliance Guard */
+  inspectionSections: [
+    {id:'front', name:'Front / Engine Area', items:['Hood / Latch','Coolant level','Oil level','Belts & hoses','Power steering fluid']},
+    {id:'cab', name:'Cab / Interior', items:['Horn','Mirrors','Wipers','Defrost','Seatbelt','Gauges','Air gauge buildup']},
+    {id:'drvside', name:'Driver Side', items:['Fuel tanks','Battery','Drive line','Exhaust / Muffler']},
+    {id:'axles', name:'Axles & Wheels', items:['Tire condition','Tire pressure','Lug nuts','Wheel seals','Suspension']},
+    {id:'brakes', name:'Brakes & Air', items:['Brake chambers','Slack adjusters','Air lines','Air pressure (90-100 psi)','Parking brake test']},
+    {id:'coupling', name:'Coupling Area', items:['Fifth wheel','Kingpin','Locking jaws','Air & electrical lines']},
+    {id:'lights', name:'Lights & Visibility', items:['Headlights','Turn signals','Brake lights','Reflectors','Clearance lights']},
+    {id:'safety', name:'Safety', items:['Fire extinguisher','Triangles / flares','First aid kit','Spare fuses']},
+    {id:'trailer', name:'Trailer Section', items:['Trailer tires','Trailer lights','Gate / dump bed','Tarps','Securement straps']}
+  ],
+  /* Past inspection reports */
+  inspectionReports: [
+    {id:'ir1', driverId:'d1', truckId:'001', date:'2026-04-25', status:'Cleared', issues:0, signed:true, mode:'Risk-First'},
+    {id:'ir2', driverId:'d1', truckId:'001', date:'2026-04-15', status:'Cleared', issues:0, signed:true, mode:'Location-Based'},
+    {id:'ir3', driverId:'d1', truckId:'001', date:'2026-01-07', status:'Report Pending', issues:2, signed:false, mode:'Risk-First'}
+  ],
+  /* Truck compliance overrides — driven by inspection results */
+  truckCompliance: [
+    {truckId:'1324', carrierName:'AVENSIS ENERGY SERVICES LLC DBA PRIMAL FREIGHT', plate:'—', vin:'—', issues:1, status:'Restricted', lastInspection:'2026-04-24', adminNotes:'Test - Both problems have been fixed the truck is safe to ride', issueDetails:[{section:'Driver Side',item:'Battery',severity:'Major',note:'Battery looks to be a little low'}]},
+    {truckId:'2780', carrierName:'AVENSIS ENERGY SERVICES LLC DBA PRIMAL FREIGHT', plate:'—', vin:'—', issues:1, status:'Restricted', lastInspection:'2026-01-11', adminNotes:'', issueDetails:[{section:'Brakes & Air',item:'Slack adjusters',severity:'Critical',note:'Slack adjusters out of spec'}]},
+    {truckId:'2756', carrierName:'AVENSIS ENERGY SERVICES LLC DBA PRIMAL FREIGHT', plate:'—', vin:'—', issues:1, status:'Restricted', lastInspection:'2026-01-18', adminNotes:'within range, no issue for now.', issueDetails:[{section:'Lights & Visibility',item:'Brake lights',severity:'Minor',note:'Right brake light dim'}]},
+    {truckId:'new7', carrierName:'4HR TRUCKING', plate:'h327', vin:'768887', issues:1, status:'Restricted', lastInspection:'2026-01-07', adminNotes:'', issueDetails:[{section:'Tires',item:'Tire pressure',severity:'Major',note:'Front left tire underinflated'}]}
+  ],
+  /* Driver shift state — only platform drivers have a shift */
+  shift: {
+    active: false,
+    driverId: 'd1',
+    truckId: '001',
+    startedAt: null,
+    inspectionStarted: false,
+    inspectionComplete: false,
+    inspectionResults: {},
+    inspectionMode: 'Location-Based'
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   APP STATE — what role is logged in, what page they're on
+   ═══════════════════════════════════════════════════════════════════════ */
+let STATE = {
+  role: null,
+  tab: null,
+  context: {}
+};
+
+const ROLE_CONFIG = {
+  shipper: {
+    portal: 'Shipper Portal',
+    user: {name:'Test Shipper', sub:'Acme Materials'},
+    tabs: [
+      {id:'loadboard', name:'Load board', icon:'i-clipboard'},
+      {id:'post', name:'Post load', icon:'i-plus'},
+      {id:'carriers', name:'Carriers', icon:'i-truck'},
+      {id:'drivers', name:'Drivers', icon:'i-user', requires:'driverOnboarding'},
+      {id:'aireceptionist', name:'AI Receptionist', icon:'i-mic', requires:'aiReceptionist'},
+      {id:'analytics', name:'Analytics', icon:'i-chart', requires:'analytics'},
+      {id:'settings', name:'Settings', icon:'i-cog'}
+    ],
+    default: 'loadboard'
+  },
+  carrier: {
+    portal: 'Carrier Portal',
+    user: {name:'Bill Khan', sub:'Lone Star Hauling LLC'},
+    carrierId: 'c1',
+    tabs: [
+      {id:'invitations', name:'Invitations', icon:'i-mail', badge:1},
+      {id:'mybids', name:'My bids', icon:'i-gavel'},
+      {id:'awarded', name:'Awarded loads', icon:'i-check-circle'},
+      {id:'fleet', name:'Fleet & drivers', icon:'i-truck'},
+      {id:'profile', name:'Company profile', icon:'i-building'}
+    ],
+    default: 'invitations'
+  },
+  driver: {
+    portal: 'Platform Driver',
+    user: {name:'Marco Garcia', sub:'Lone Star Hauling · 🇲🇽 Español'},
+    driverId: 'd1',
+    tabs: [
+      {id:'shift', name:'My shift', icon:'i-clock'},
+      {id:'inspection', name:'Pre-trip inspection', icon:'i-clipboard', requires:'complianceGuard'},
+      {id:'magiclink', name:'Active load', icon:'i-link'}
+    ],
+    default: 'shift'
+  },
+  magiclink: {
+    portal: 'Magic Link · Driver',
+    user: {name:'Driver', sub:'+1 (713) 555-0188 · No app · No login'},
+    tabs: [],
+    default: 'magiclink'
+  },
+  scalehouse: {
+    portal: 'Scalehouse',
+    user: {name:'Maria Reyes', sub:'Primal Materials Pickup Pit'},
+    tabs: [
+      {id:'tickets', name:'Tickets', icon:'i-receipt'},
+      {id:'trucks', name:'Trucks', icon:'i-truck'},
+      {id:'newticket', name:'Activate ticket', icon:'i-plus'}
+    ],
+    default: 'tickets'
+  },
+  destination: {
+    portal: 'Destination Attendant',
+    user: {name:'Bobby Mitchell', sub:'Kiewit Site'},
+    tabs: [
+      {id:'incoming', name:'Incoming', icon:'i-bell'},
+      {id:'received', name:'Received today', icon:'i-check-circle'}
+    ],
+    default: 'incoming'
+  },
+  vendor: {
+    portal: 'Vendor Portal',
+    user: {name:'Max Mat', sub:'4HR Trucking'},
+    carrierId: 'c5',
+    tabs: [
+      {id:'company', name:'Company info', icon:'i-building'},
+      {id:'contacts', name:'Contacts', icon:'i-user'},
+      {id:'trucks', name:'Trucks', icon:'i-truck'},
+      {id:'drivers', name:'Drivers', icon:'i-user'},
+      {id:'tickets', name:'Tickets', icon:'i-receipt'}
+    ],
+    default: 'tickets'
+  },
+  admin: {
+    portal: 'Platform Admin',
+    user: {name:'Platform Admin', sub:'Carry Ops'},
+    tabs: [
+      {id:'companies', name:'Companies', icon:'i-building'},
+      {id:'compliance', name:'Fleet compliance', icon:'i-shield'},
+      {id:'pickup', name:'Pickup locations', icon:'i-pin'},
+      {id:'dest', name:'Destination sites', icon:'i-flag'},
+      {id:'bidding', name:'Bidding rules', icon:'i-gavel'},
+      {id:'modules', name:'Module toggles', icon:'i-cog'}
+    ],
+    default: 'companies'
+  }
+};
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════════════ */
+function $(s){return document.querySelector(s)}
+function $$(s){return document.querySelectorAll(s)}
+function ico(name,size=14,extra=''){return `<svg class="ico" width="${size}" height="${size}" ${extra}><use href="#i-${name}"/></svg>`}
+function carrier(id){return SEED.carriers.find(c=>c.id===id)}
+function load(id){return SEED.loads.find(l=>l.id===id)}
+function driver(id){return SEED.drivers.find(d=>d.id===id)}
+function ticket(id){return SEED.tickets.find(t=>t.id===id)}
+function truck(id){return SEED.trucks.find(t=>t.id===id)}
+function fmt(n){return n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0})}
+function money(n){return '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function stars(n){let s='';for(let i=0;i<5;i++)s+=i<n?'★':'☆';return s}
+function showToast(msg){const t=$('#toast');$('#toastMsg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+function openModal(html){$('#modalContent').innerHTML='<button class="modal-close" onclick="closeModal()">'+ico('x',14)+'</button>'+html;$('#modalBg').classList.add('show')}
+function closeModal(){$('#modalBg').classList.remove('show')}
+function openAppRoute(path){window.top.location.href=path}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ROLE ENTRY / EXIT
+   ═══════════════════════════════════════════════════════════════════════ */
+function enterAs(role){
+  STATE.role = role;
+  STATE.tab = ROLE_CONFIG[role].default;
+  STATE.context = {};
+  $('#rolePicker').style.display='none';
+  $('#app').classList.add('active');
+  $('#roleSwitcher').style.display='flex';
+  document.body.scrollTo(0,0);
+  renderShell();
+  renderPage();
+}
+
+function signOut(){
+  STATE.role=null;
+  $('#rolePicker').style.display='flex';
+  $('#app').classList.remove('active');
+  $('#roleSwitcher').style.display='none';
+  document.body.scrollTo(0,0);
+}
+
+function setTab(id){
+  STATE.tab = id;
+  STATE.context = {};
+  renderShell();
+  renderPage();
+  window.scrollTo(0,0);
+}
+
+function resetDemo(){
+  if(confirm('Reset all demo state? This will clear any new loads, bids, or tickets you created.'))location.reload();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SHELL RENDER (topnav)
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderShell(){
+  const cfg = ROLE_CONFIG[STATE.role];
+  $('#topnavPortal').textContent = cfg.portal;
+  $('#topnavUser').innerHTML = `<strong>${cfg.user.name}</strong><span>${cfg.user.sub}</span>`;
+  $('#topnavTabs').innerHTML = cfg.tabs.filter(t=>!t.requires||SEED.workspace.modules[t.requires]?.on).map(t=>{
+    const active = STATE.tab===t.id?'active':'';
+    const badge = t.badge?`<span style="background:var(--orange);color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:100px;margin-left:4px">${t.badge}</span>`:'';
+    return `<button class="topnav-tab ${active}" onclick="setTab('${t.id}')">${ico(t.icon,14)}${t.name}${badge}</button>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PAGE RENDER (router)
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderPage(){
+  const c = $('#appContent');
+  const role = STATE.role;
+  const tab = STATE.tab;
+  const key = role+':'+tab;
+
+  // detail views handled by context
+  if(STATE.context.viewLoad){c.innerHTML = renderLoadDetail(STATE.context.viewLoad); return}
+  if(STATE.context.viewCarrier){c.innerHTML = renderCarrierDetail(STATE.context.viewCarrier); return}
+  if(STATE.context.viewDriver){c.innerHTML = renderDriverDetail(STATE.context.viewDriver); return}
+  if(STATE.context.viewCandidate){c.innerHTML = renderCandidateDetail(STATE.context.viewCandidate); return}
+  if(STATE.context.viewTicket){c.innerHTML = renderTicketDetail(STATE.context.viewTicket); return}
+  if(STATE.context.bidOnLoad){c.innerHTML = renderCarrierBidForm(STATE.context.bidOnLoad); return}
+
+  const map = {
+    'shipper:loadboard': renderShipperLoadBoard,
+    'shipper:post': renderShipperPostLoad,
+    'shipper:carriers': renderShipperCarriers,
+    'shipper:drivers': renderShipperDrivers,
+    'shipper:aireceptionist': renderShipperAIReceptionist,
+    'shipper:analytics': renderShipperAnalytics,
+    'shipper:settings': renderShipperSettings,
+    'carrier:invitations': renderCarrierInvitations,
+    'carrier:mybids': renderCarrierMyBids,
+    'carrier:awarded': renderCarrierAwarded,
+    'carrier:fleet': renderCarrierFleet,
+    'carrier:profile': renderCarrierProfile,
+    'driver:shift': renderDriverShift,
+    'driver:inspection': renderDriverInspection,
+    'driver:magiclink': renderDriverMagicLink,
+    'magiclink:magiclink': renderMagicLinkOnly,
+    'scalehouse:tickets': renderScalehouseTickets,
+    'scalehouse:trucks': renderScalehouseTrucks,
+    'scalehouse:newticket': renderScalehouseNewTicket,
+    'destination:incoming': renderDestIncoming,
+    'destination:received': renderDestReceived,
+    'vendor:company': renderVendorCompany,
+    'vendor:contacts': renderVendorContacts,
+    'vendor:trucks': renderVendorTrucks,
+    'vendor:drivers': renderVendorDrivers,
+    'vendor:tickets': renderVendorTickets,
+    'admin:companies': renderAdminCompanies,
+    'admin:compliance': renderAdminCompliance,
+    'admin:pickup': renderAdminPickup,
+    'admin:dest': renderAdminDest,
+    'admin:bidding': renderAdminBidding,
+    'admin:modules': renderAdminModules
+  };
+
+  c.innerHTML = (map[key]?map[key]():`<div class="app-body"><div class="empty">Page not built in demo</div></div>`);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── SHIPPER PORTAL ──
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderShipperLoadBoard(){
+  const loads = SEED.loads;
+  const open = loads.filter(l=>l.status==='Open').length;
+  const inProg = loads.filter(l=>l.status==='In Progress').length;
+  const totalBids = loads.reduce((s,l)=>s+l.bids.length,0);
+  const invited = loads.reduce((s,l)=>s+l.invited.length,0);
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div>
+        <h1>Load Board</h1>
+        <p>Track every load you've posted and the bids you've received.</p>
+      </div>
+      <div class="page-head-cta">
+        <button class="btn btn-primary" onclick="setTab('post')">${ico('plus',14)}Post a load</button>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('clipboard',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Open Loads</div><div class="kpi-val">${open}</div></div></div>
+      <div class="kpi"><div class="kpi-icon blue">${ico('truck',20,'style="stroke:var(--blue)"')}</div><div><div class="kpi-label">In Progress</div><div class="kpi-val">${inProg}</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('gavel',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">Total Bids</div><div class="kpi-val">${totalBids}</div></div></div>
+      <div class="kpi"><div class="kpi-icon amber">${ico('mail',20,'style="stroke:var(--amber)"')}</div><div><div class="kpi-label">Carriers Invited</div><div class="kpi-val">${invited}</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="row mb-16" style="gap:10px">
+        <div class="row" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:8px 12px">
+          ${ico('search',16,'style="stroke:var(--g3)"')}
+          <input class="f-in" style="border:none;background:transparent;padding:0" placeholder="Search by ref, lane, commodity…">
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Reference</th><th>Lane</th><th>Pickup</th><th>Equipment</th><th>Status</th><th style="text-align:right">Loads</th><th style="text-align:right">Bids</th><th style="text-align:right">Lowest</th></tr></thead>
+        <tbody>
+        ${loads.map(l=>{
+          const lowest = l.bids.length?Math.min(...l.bids.map(b=>b.amount)):null;
+          const statusPill = {'Open':'blue','Cancelled':'red','In Progress':'amber pill-live','Completed':'green'}[l.status]||'gray';
+          return `<tr onclick="viewLoad('${l.id}')">
+            <td class="mono bold">${l.id}</td>
+            <td>${l.origin.split(',').slice(-2,-1)[0].trim()}, TX → ${l.dest.split(',').slice(-2,-1)[0].trim()}, TX<div class="tiny muted">${l.distance}</div></td>
+            <td>${l.pickup}</td>
+            <td>${l.equipment}</td>
+            <td><span class="pill ${statusPill}"><span class="dot"></span>${l.status}</span>${l.mode==='Set Rate'?'<div class="tiny muted mt-12" style="margin-top:4px">Set rate</div>':''}</td>
+            <td style="text-align:right">${typeof l.loadCount==='string'&&l.loadCount.includes('day')?l.loadCount.split('×')[0]:'1'}</td>
+            <td style="text-align:right" class="bold">${l.bids.length} <span class="muted">/ ${l.invited.length}</span></td>
+            <td style="text-align:right">${lowest?'$'+fmt(lowest):'—'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function viewLoad(id){STATE.context.viewLoad=id;renderPage();window.scrollTo(0,0)}
+function backFromLoad(){delete STATE.context.viewLoad;renderPage()}
+
+function renderLoadDetail(id){
+  const l = load(id);
+  if(!l)return `<div class="app-body"><div class="empty">Load not found</div></div>`;
+  const isShipper = STATE.role==='shipper';
+  const isCarrier = STATE.role==='carrier';
+  const carrierId = ROLE_CONFIG.carrier.carrierId;
+  const myBid = isCarrier?l.bids.find(b=>b.carrierId===carrierId):null;
+  const isInvited = isCarrier&&l.invited.includes(carrierId);
+  const sortedBids = [...l.bids].sort((a,b)=>a.amount-b.amount);
+  const lowest = sortedBids[0]?.amount;
+
+  return `
+  <div class="app-body">
+    <div class="row mb-16" style="gap:14px">
+      <button class="btn btn-ghost btn-sm" onclick="${isShipper?'backFromLoad()':'setTab(\'invitations\')'}">${ico('arrow-left',14)}Back</button>
+      <div class="serif" style="font-size:28px;font-weight:400">${l.id}</div>
+      <span class="pill ${l.status==='Open'?'blue':l.status==='In Progress'?'amber pill-live':l.status==='Cancelled'?'red':'green'}"><span class="dot"></span>${l.status}</span>
+      ${l.mode==='Set Rate'?`<span class="pill orange">Set rate · ${money(l.setRate)}</span>`:''}
+    </div>
+
+    <div class="grid" style="grid-template-columns:2fr 1fr;gap:18px;margin-bottom:24px">
+      <div class="card">
+        <div class="detail-grid">
+          <div><div class="detail-item"><div class="label">Origin</div><div class="value">${l.origin.split(',')[0]}</div><div class="small muted">${l.origin.split(',').slice(1).join(',').trim()}</div></div>
+          <div class="detail-item"><div class="label">Distance</div><div class="value">${l.distance}</div></div>
+          <div class="detail-item"><div class="label">Pickup</div><div class="value">${l.pickup}</div></div>
+          <div class="detail-item"><div class="label">Commodity</div><div class="value">${l.commodity}</div></div>
+          <div class="detail-item"><div class="label">${isShipper?'Target / load':'Set rate'}</div><div class="value">${l.target?money(l.target):'—'}</div></div>
+          <div class="detail-item"><div class="label">Hazmat / temp</div><div class="value">${l.hazmat?'Hazmat':'—'}</div></div></div>
+          <div><div class="detail-item"><div class="label">Destination</div><div class="value">${l.dest.split(',')[0]}</div><div class="small muted">${l.dest.split(',').slice(1).join(',').trim()}</div></div>
+          <div class="detail-item"><div class="label">Equipment</div><div class="value">${l.equipment}</div></div>
+          <div class="detail-item"><div class="label">Delivery</div><div class="value">${l.delivery}</div></div>
+          <div class="detail-item"><div class="label">Weight</div><div class="value">${l.weight}</div></div>
+          <div class="detail-item"><div class="label">Loads</div><div class="value">${l.loadCount}</div></div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="label mb-8">Notes</div>
+        <div class="small">${l.notes||'—'}</div>
+      </div>
+      <div class="card">
+        <div class="label mb-8">Bid deadline</div>
+        <div class="value lg mb-12">${l.deadline||'—'}</div>
+        ${l.deadline&&new Date(l.deadline)<new Date()?'<div class="pill red"><span class="dot"></span>Bidding closed</div>':l.deadline?'<div class="pill green"><span class="dot"></span>Open</div>':''}
+        <div class="divider"></div>
+        <div class="label mb-8">Bids</div>
+        <div class="value mb-16">${l.bids.length} submitted · ${l.invited.length} invited</div>
+        ${isShipper&&l.status==='Open'?`<button class="btn btn-danger" style="width:100%" onclick="cancelLoad('${l.id}')">${ico('x',14)}Cancel load</button>`:''}
+        ${isCarrier&&isInvited&&!myBid&&l.status==='Open'?`<button class="btn btn-primary" style="width:100%" onclick="bidOnLoad('${l.id}')">${ico('gavel',14)}Submit bid</button>`:''}
+        ${isCarrier&&myBid?`<div class="pill green" style="width:100%;justify-content:center">${ico('check',12)} Bid submitted: ${money(myBid.amount)}</div>`:''}
+      </div>
+    </div>
+
+    ${isShipper?`
+    <div class="card">
+      <div class="card-head"><h3>${ico('gavel',14)} Bids · visible only to you</h3>
+        <div class="row gap-8">
+          <span class="pill gray">${l.bids.length} of ${l.invited.length} submitted</span>
+          ${l.bids.length>0&&l.status==='Open'?`<button class="btn btn-blue btn-sm">Compare bids</button>`:''}
+        </div>
+      </div>
+      ${l.bids.length===0?`<div class="empty">No bids yet. Carriers have until ${l.deadline} to submit.</div>`:`
+      <table class="tbl">
+        <thead><tr><th>Carrier</th><th>Bid</th><th>Per ton</th><th>Safety</th><th>On-time</th><th>Disputes</th><th>Submitted</th><th></th></tr></thead>
+        <tbody>
+        ${sortedBids.map((b,i)=>{
+          const c = carrier(b.carrierId);
+          const isAwarded = b.winner;
+          const isLowest = i===0;
+          return `<tr style="${isAwarded?'background:rgba(16,185,129,0.05)':''}">
+            <td><div class="bold">${c.name}</div><div class="tiny muted">${stars(Math.round(c.safetyScore/20))} · ${c.city}</div></td>
+            <td class="bold">${money(b.amount)}${isLowest&&!isAwarded?' <span class="pill green tiny" style="margin-left:6px">Lowest</span>':''}${isAwarded?' <span class="pill green tiny" style="margin-left:6px">Awarded</span>':''}</td>
+            <td>${b.perTon}</td>
+            <td><span style="color:${c.safetyScore>=90?'var(--green)':c.safetyScore>=80?'var(--amber)':'var(--red)'};font-weight:600">${c.safetyScore}</span></td>
+            <td>${c.onTime}%</td>
+            <td>${c.disputes}</td>
+            <td class="muted small">${b.submittedAt}</td>
+            <td>${l.status==='Open'&&!isAwarded?`<button class="btn btn-success btn-sm" onclick="awardLoad('${l.id}','${b.carrierId}')">${ico('check',12)}Award</button>`:''}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      ${l.bids.length>0?`<div class="card-tight" style="background:rgba(249,115,22,0.06);border:1px solid var(--orange-border);margin-top:14px">
+        <div class="row" style="gap:12px">
+          ${ico('shield',16,'style="stroke:var(--orange)"')}
+          <div class="small">
+            <strong>Award on the full picture.</strong> Lowest bid is ${money(lowest)} from ${carrier(sortedBids[0].carrierId).name}, but consider safety score and disputes — the second-lowest carrier has zero disputes vs. ${sortedBids[0]&&sortedBids.length>1?carrier(sortedBids[0].carrierId).disputes:0} on the lowest bid.
+          </div>
+        </div>
+      </div>`:''}
+      `}
+    </div>
+
+    <div class="card mt-16">
+      <div class="card-head"><h3>${ico('mail',14)} Invitations · ${l.invited.length} carriers</h3></div>
+      <table class="tbl">
+        <thead><tr><th>Carrier</th><th>City</th><th>Safety</th><th>Trucks</th><th>Status</th></tr></thead>
+        <tbody>
+        ${l.invited.map(cid=>{
+          const c=carrier(cid);
+          const bid=l.bids.find(b=>b.carrierId===cid);
+          return `<tr><td class="bold">${c.name}</td><td class="muted">${c.city}</td><td>${c.safetyScore}</td><td>${c.trucks}</td><td>${bid?'<span class="pill green"><span class="dot"></span>Bid submitted</span>':'<span class="pill gray"><span class="dot"></span>Pending</span>'}</td></tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+    `:''}
+
+    ${isCarrier&&isInvited?`
+    <div class="card">
+      <div class="card-head"><h3>${ico('eye',14)} Your bid · only you and the shipper see this</h3></div>
+      ${myBid?`<div class="row-between">
+        <div>
+          <div class="label">Your submitted bid</div>
+          <div class="value lg">${money(myBid.amount)}</div>
+          <div class="small muted">${myBid.submittedAt}</div>
+        </div>
+        <div class="text-right">
+          <div class="small muted mb-8">Note to shipper</div>
+          <div class="small">${myBid.notes||'—'}</div>
+        </div>
+      </div>`:`
+      <div class="empty">You haven't bid yet. <button class="btn btn-primary mt-12" onclick="bidOnLoad('${l.id}')">Submit your bid</button></div>
+      `}
+    </div>
+    `:''}
+  </div>`;
+}
+
+function cancelLoad(id){
+  if(!confirm('Cancel this load? Invited carriers will be notified.'))return;
+  const l = load(id); l.status='Cancelled';
+  showToast('Load cancelled');
+  delete STATE.context.viewLoad;
+  renderPage();
+}
+
+function awardLoad(loadId, carrierId){
+  if(!confirm('Award this load to '+carrier(carrierId).name+'?'))return;
+  const l = load(loadId);
+  l.status='In Progress';
+  l.mode='Awarded';
+  l.awardedTo=carrierId;
+  l.bids.forEach(b=>{if(b.carrierId===carrierId)b.winner=true});
+  // notify carrier
+  if(SEED.notifications['carrier_'+carrierId])SEED.notifications['carrier_'+carrierId].unshift({id:'n'+Date.now(), type:'award', loadId, message:'Load awarded: '+l.commodity+' '+l.origin.split(',').slice(-2,-1)[0].trim()+'→'+l.dest.split(',').slice(-2,-1)[0].trim(), time:'just now', read:false});
+  showToast(carrier(carrierId).name+' was awarded the load. They\'ve been notified.');
+  renderPage();
+}
+
+function bidOnLoad(id){STATE.context.bidOnLoad=id;renderPage();window.scrollTo(0,0)}
+
+function renderShipperPostLoad(){
+  return `
+  <div class="app-body narrow">
+    <div class="page-head">
+      <div><h1>Post a Load</h1><p>Carriers will only be invited if they're verified <em>and</em> match the equipment, lane, and capacity you specify.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="f-row-2">
+        <div class="f-grp"><label class="f-lbl">Origin address *</label><input class="f-in" id="postOrigin" placeholder="Pickup address" value="1500 Industrial Blvd, Houston, TX"></div>
+        <div class="f-grp"><label class="f-lbl">Destination *</label><input class="f-in" id="postDest" placeholder="Delivery address" value="2200 Conroe Park, Conroe, TX"></div>
+      </div>
+
+      <div class="f-row-3">
+        <div class="f-grp"><label class="f-lbl">Equipment *</label>
+          <select class="f-sel" id="postEquip"><option>Belly Dump</option><option>End Dump</option><option>Flatbed</option><option>Side Dump</option><option>Pneumatic</option></select>
+        </div>
+        <div class="f-grp"><label class="f-lbl">Commodity *</label><input class="f-in" id="postCommodity" value="Crushed limestone"></div>
+        <div class="f-grp"><label class="f-lbl">Hazmat / Temp</label><select class="f-sel"><option>None</option><option>Hazmat</option><option>Temp-controlled</option></select></div>
+      </div>
+
+      <div class="f-row-4">
+        <div class="f-grp"><label class="f-lbl">Pickup date</label><input class="f-in" type="date" value="2026-04-30"></div>
+        <div class="f-grp"><label class="f-lbl">Delivery date</label><input class="f-in" type="date" value="2026-05-14"></div>
+        <div class="f-grp"><label class="f-lbl">Tonnage / load</label><input class="f-in" value="26"></div>
+        <div class="f-grp"><label class="f-lbl">Loads / day</label><input class="f-in" value="8"></div>
+      </div>
+
+      <div class="f-grp"><label class="f-lbl">Mode *</label>
+        <div class="row gap-8">
+          <label class="row gap-8" style="background:var(--orange-dim);border:1px solid var(--orange-border);padding:10px 14px;border-radius:7px;cursor:pointer;flex:1"><input type="radio" name="mode" checked> <strong>Open Bid</strong> — invite, see bids, award</label>
+          <label class="row gap-8" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);padding:10px 14px;border-radius:7px;cursor:pointer;flex:1"><input type="radio" name="mode"> <strong>Set Rate</strong> — pre-set the rate, carriers accept or decline</label>
+        </div>
+      </div>
+
+      <div class="f-grp"><label class="f-lbl">Target rate / load</label><input class="f-in" id="postRate" value="920"></div>
+
+      <div class="f-grp"><label class="f-lbl">Notes (visible to invited carriers)</label><textarea class="f-ta" id="postNotes">PPE required onsite. Tarps required. Driver assist on load.</textarea></div>
+
+      <div class="card-tight" style="background:rgba(59,130,246,0.04);border:1px solid var(--blue-border);margin-bottom:14px">
+        <div class="row gap-8">
+          ${ico('shield',14,'style="stroke:var(--blue)"')}
+          <div class="small"><strong>Auto-matched carriers:</strong> based on Belly Dump + this lane + capacity, the platform will invite <strong style="color:var(--blue)">4 verified carriers</strong> from your network. You can adjust the list before sending.</div>
+        </div>
+      </div>
+
+      <div class="row mt-16 gap-8" style="justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="setTab('loadboard')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitNewLoad()">${ico('mail',14)}Post & send invitations</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function submitNewLoad(){
+  const newId = 'LD-'+Math.random().toString(16).slice(2,10).toUpperCase();
+  const newLoad = {
+    id: newId,
+    origin: $('#postOrigin').value,
+    dest: $('#postDest').value,
+    distance: '~50 mi',
+    equipment: $('#postEquip').value,
+    commodity: $('#postCommodity').value,
+    pickup: '2026-04-30',
+    delivery: '2026-05-14',
+    weight: '26 tons / load',
+    loadCount: '8 loads / day × 14 days',
+    target: parseInt($('#postRate').value)||0,
+    hazmat: false,
+    notes: $('#postNotes').value,
+    status: 'Open',
+    mode: 'Open Bid',
+    deadline: '2026-04-29 18:00',
+    invited: ['c1','c2','c3','c4'],
+    bids: []
+  };
+  SEED.loads.unshift(newLoad);
+  // notify all invited carriers
+  newLoad.invited.forEach(cid=>{
+    const key='carrier_'+cid;
+    if(!SEED.notifications[key])SEED.notifications[key]=[];
+    SEED.notifications[key].unshift({id:'n'+Date.now()+cid, type:'invitation', loadId:newId, message:'New invitation: '+newLoad.commodity, time:'just now', read:false});
+  });
+  showToast('Load posted. 4 verified carriers invited.');
+  setTab('loadboard');
+  setTimeout(()=>viewLoad(newId),100);
+}
+
+function renderShipperCarriers(){
+  const carriers = SEED.carriers.filter(c=>c.status==='Active');
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Carrier Directory</h1><p>Carriers from your network. Invite any of them to bid when posting a load. Only verified carriers appear here.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="row gap-16 mb-16">
+        <div class="row" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:8px 12px">${ico('search',16,'style="stroke:var(--g3)"')}
+          <input class="f-in" style="border:none;background:transparent;padding:0" placeholder="Search by name, MC/DOT, city…">
+        </div>
+        <button class="btn btn-ghost btn-sm">All (${SEED.carriers.length})</button>
+        <button class="btn btn-blue btn-sm">Active (${carriers.length})</button>
+      </div>
+
+      <table class="tbl">
+        <thead><tr><th>Carrier</th><th>Contact</th><th>MC / DOT</th><th>City</th><th>Trucks</th><th>Safety</th><th>On-time</th><th>Status</th></tr></thead>
+        <tbody>
+        ${carriers.map(c=>`
+          <tr onclick="viewCarrier('${c.id}')">
+            <td class="bold">${c.name}</td>
+            <td>${c.primary}<div class="tiny muted">${c.email}</div></td>
+            <td class="mono small">${c.mc} / ${c.dot}</td>
+            <td>${c.city}</td>
+            <td>${c.trucks}</td>
+            <td><span style="color:${c.safetyScore>=90?'var(--green)':c.safetyScore>=80?'var(--amber)':'var(--red)'};font-weight:600">${c.safetyScore}</span></td>
+            <td>${c.onTime}%</td>
+            <td><span class="pill green"><span class="dot"></span>Active</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function viewCarrier(id){STATE.context.viewCarrier=id;renderPage();window.scrollTo(0,0)}
+function backFromCarrier(){delete STATE.context.viewCarrier;renderPage()}
+
+function renderCarrierDetail(id){
+  const c = carrier(id);
+  if(!c)return `<div class="app-body"><div class="empty">Carrier not found</div></div>`;
+  const steps = [
+    {name:'Email Sent', status:c.email?'done':'pending'},
+    {name:'Agreement', status:c.agreement?'done':'pending'},
+    {name:'Company Details', status:c.verified?'done':c.status.includes('Onboarding')?'active':'pending'},
+    {name:'Contacts', status:c.contacts>0?'done':'pending'},
+    {name:'Fleet', status:c.fleet>0?'done':'pending'},
+    {name:'Trailers', status:c.trailers>0?'done':'pending'},
+    {name:'Drivers', status:c.driversComplete?'done':'pending'},
+    {name:'Portal Access', status:c.portalAccess?'done':'pending'}
+  ];
+  return `
+  <div class="app-body">
+    <div class="row mb-16 gap-16">
+      <button class="btn btn-ghost btn-sm" onclick="backFromCarrier()">${ico('arrow-left',14)}Back</button>
+    </div>
+
+    <div class="card mb-16">
+      <div class="row-between mb-16">
+        <div class="row gap-16">
+          <div style="width:48px;height:48px;background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:10px;display:flex;align-items:center;justify-content:center">${ico('building',22,'style="stroke:var(--orange)"')}</div>
+          <div>
+            <div class="serif" style="font-size:24px;font-weight:600">${c.name}</div>
+            <div class="row gap-8 mt-12"><span class="small muted">Carrier</span><span class="pill ${c.status==='Active'?'green':c.status==='Suspended'?'red':'amber'}"><span class="dot"></span>${c.status}</span></div>
+            <div class="small muted mt-12">Primary Contact: ${c.primary}</div>
+          </div>
+        </div>
+        <div class="row gap-8">
+          <button class="btn btn-ghost btn-sm">${ico('edit',12)}Edit</button>
+          ${c.status==='Active'?'<button class="btn btn-danger btn-sm">Suspend</button>':''}
+        </div>
+      </div>
+
+      <div class="card-tight" style="background:rgba(255,255,255,0.02)">
+        <div class="text-center mb-16 small bold">Onboarding Progress</div>
+        <div class="prog-wrap">
+          ${steps.map(s=>`
+            <div class="prog-step ${s.status}">
+              <div class="prog-circle">${s.status==='done'?ico('check',16,'style="stroke:var(--green)"'):s.status==='active'?ico('clock',14,'style="stroke:var(--orange)"'):ico('mail',14,'style="stroke:var(--g3)"')}</div>
+              <div class="prog-name">${s.name}</div>
+              <div class="prog-status ${s.status==='done'?'complete':s.status==='active'?'pending':''}">${s.status==='done'?'Complete':s.status==='active'?'In Progress':'Not Started'}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:2fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-head"><h3>Company Information</h3></div>
+        <div class="f-row-2">
+          <div class="f-grp"><div class="label">Company Name</div><div class="value">${c.name}</div></div>
+          <div class="f-grp"><div class="label">Type</div><div class="value">Carrier</div></div>
+        </div>
+        <div class="f-row-2">
+          <div class="f-grp"><div class="label">MC Number</div><div class="value mono">${c.mc}</div></div>
+          <div class="f-grp"><div class="label">DOT Number</div><div class="value mono">${c.dot}</div></div>
+        </div>
+        <div class="f-row-2">
+          <div class="f-grp"><div class="label">City</div><div class="value">${c.city}</div></div>
+          <div class="f-grp"><div class="label">DOT Rating</div><div class="value">${c.dotRating}</div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="label mb-8">Uploaded Documents</div>
+        <div class="row gap-16 small">
+          <a style="color:var(--orange);cursor:pointer">${ico('doc',12)} Certificate of Insurance</a>
+          ${c.w9?`<a style="color:var(--orange);cursor:pointer">${ico('doc',12)} W-9 Form</a>`:'<span class="muted">${ico(\'doc\',12)} W-9 (missing)</span>'}
+        </div>
+      </div>
+
+      <div>
+        <div class="card mb-16">
+          <div class="card-head"><h3>Performance</h3></div>
+          <div class="row-between mb-12"><span class="muted small">Safety score</span><span class="bold" style="color:${c.safetyScore>=90?'var(--green)':c.safetyScore>=80?'var(--amber)':'var(--red)'}">${c.safetyScore}/100</span></div>
+          <div class="row-between mb-12"><span class="muted small">On-time delivery</span><span class="bold">${c.onTime}%</span></div>
+          <div class="row-between mb-12"><span class="muted small">Completion rate</span><span class="bold">${c.completion}%</span></div>
+          <div class="row-between mb-12"><span class="muted small">Disputes (12mo)</span><span class="bold">${c.disputes}</span></div>
+          <div class="row-between"><span class="muted small">Stars</span><span class="bold" style="color:var(--orange)">${stars(Math.round(c.safetyScore/20))}</span></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Fleet</h3></div>
+          <div class="row-between mb-12"><span class="muted small">Trucks</span><span class="bold">${c.trucks}</span></div>
+          <div class="row-between mb-12"><span class="muted small">Trailers</span><span class="bold">${c.trailers}</span></div>
+          <div class="row-between"><span class="muted small">Drivers</span><span class="bold">${c.drivers}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderShipperDrivers(){
+  const candidates = SEED.driverCandidates;
+  const platformDrivers = SEED.drivers.filter(d=>d.type==='platform');
+  const stages = ['Initial Connect','Documents','MVR Record','Drug Test','Orientation'];
+  const aiOn = SEED.workspace.modules.aiReceptionist.on;
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Drivers</h1><p>Recruit, assess, and onboard your platform drivers. ${aiOn?'AI Receptionist is calling candidates automatically.':'<span style="color:var(--amber)">AI Receptionist is off — toggle on in Settings to automate candidate calls.</span>'}</p></div>
+      <div class="page-head-cta"><button class="btn btn-primary" onclick="addCandidate()">${ico('plus',14)}Add candidate</button></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('user',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Active Drivers</div><div class="kpi-val">${platformDrivers.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon blue">${ico('clock',20,'style="stroke:var(--blue)"')}</div><div><div class="kpi-label">In Pipeline</div><div class="kpi-val">${candidates.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('check-circle',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">Avg Days to Hire</div><div class="kpi-val">14</div></div></div>
+      <div class="kpi"><div class="kpi-icon amber">${ico('mail',20,'style="stroke:var(--amber)"')}</div><div><div class="kpi-label">Awaiting Action</div><div class="kpi-val">${candidates.filter(c=>c.stage==='Drug Test'||c.docs && Object.values(c.docs).some(v=>!v)).length}</div></div></div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-head"><h3>Driver Pipeline</h3><span class="small muted">${candidates.length} candidates · drag-style stages</span></div>
+      <table class="tbl">
+        <thead><tr><th>Candidate</th><th>Stage</th><th>Source</th><th>Yard</th><th>Position</th><th>Lang</th><th>Applied</th><th>Status</th></tr></thead>
+        <tbody>
+        ${candidates.map(c=>`
+          <tr onclick="viewCandidate('${c.id}')">
+            <td><div class="bold">${c.name}</div><div class="tiny muted">${c.phone}</div></td>
+            <td><span class="pill ${stages.indexOf(c.stage)<2?'amber':stages.indexOf(c.stage)<4?'blue':'green'}"><span class="dot"></span>${c.stage}</span></td>
+            <td>${c.source}</td>
+            <td>${c.yard}</td>
+            <td>${c.position}</td>
+            <td>${c.language}</td>
+            <td class="muted small">${c.applied}</td>
+            <td class="small">${c.status}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>${ico('check-circle',14)}Active Platform Drivers</h3><span class="small muted">${platformDrivers.length} active · full compliance tracked</span></div>
+      <table class="tbl">
+        <thead><tr><th>Driver</th><th>Carrier</th><th>CDL Exp</th><th>Medical Exp</th><th>Drug Test Exp</th><th>Compliance</th><th>Lang</th></tr></thead>
+        <tbody>
+        ${platformDrivers.map(d=>{
+          const c = carrier(d.carrierId);
+          return `<tr onclick="viewDriver('${d.id}')">
+            <td class="bold">${d.name}</td>
+            <td>${c.name}</td>
+            <td class="small">${d.cdlExpires}</td>
+            <td class="small">${d.medicalExpires}</td>
+            <td class="small">${d.drugTestExpires}</td>
+            <td><span style="color:${d.complianceScore>=90?'var(--green)':d.complianceScore>=80?'var(--amber)':'var(--red)'};font-weight:600">${d.complianceScore}/100</span></td>
+            <td>${d.language}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function viewCandidate(id){STATE.context.viewCandidate=id;renderPage();window.scrollTo(0,0)}
+function backFromCandidate(){delete STATE.context.viewCandidate;renderPage()}
+function addCandidate(){showToast('Add candidate form would open here — wire to your real driver lead intake.')}
+
+function renderShipperAIReceptionist(){
+  const calls = SEED.aiCalls;
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>AI Receptionist</h1><p>Texan-voice AI assistant. Outbound calls to candidates, inbound calls answered, SMS follow-ups, document reminders. English & Español.</p></div>
+      <div class="page-head-cta"><button class="btn btn-blue">${ico('plus',14)}Schedule outbound calls</button></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('mic',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Calls Today</div><div class="kpi-val">${calls.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('check-circle',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">Connected</div><div class="kpi-val">${calls.filter(c=>c.outcome==='Connected').length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon amber">${ico('mail',20,'style="stroke:var(--amber)"')}</div><div><div class="kpi-label">Voicemail / SMS</div><div class="kpi-val">${calls.filter(c=>c.outcome==='Voicemail').length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon blue">${ico('user',20,'style="stroke:var(--blue)"')}</div><div><div class="kpi-label">Candidates Updated</div><div class="kpi-val">${new Set(calls.filter(c=>c.candidateId).map(c=>c.candidateId)).size}</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Recent Calls</h3>
+        <div class="row gap-8"><span class="pill green pill-live"><span class="dot"></span>AI Active</span><button class="btn btn-ghost btn-sm">${ico('cog',12)}Voice settings</button></div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Direction</th><th>Candidate</th><th>Purpose</th><th>Duration</th><th>Outcome</th><th>Time</th></tr></thead>
+        <tbody>
+        ${calls.map(call=>{
+          const cand = call.candidateId?SEED.driverCandidates.find(c=>c.id===call.candidateId):null;
+          return `<tr onclick="viewAICall('${call.id}')">
+            <td><span class="pill ${call.direction==='outbound'?'orange':'blue'}"><span class="dot"></span>${call.direction}</span></td>
+            <td class="bold">${cand?cand.name:'<span class="muted">Inbound · unknown</span>'}</td>
+            <td class="small">${call.purpose}</td>
+            <td class="mono small">${call.duration}</td>
+            <td><span class="pill ${call.outcome==='Connected'?'green':'amber'}"><span class="dot"></span>${call.outcome}</span></td>
+            <td class="muted small">${call.time}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function viewAICall(id){
+  const call = SEED.aiCalls.find(c=>c.id===id);
+  const cand = call.candidateId?SEED.driverCandidates.find(c=>c.id===call.candidateId):null;
+  openModal(`
+    <h2>AI Call · ${call.purpose}</h2>
+    <div class="modal-sub">${cand?cand.name+' · '+cand.phone:'Unknown caller'} · ${call.time} · ${call.duration}</div>
+    <div class="card-tight mb-12" style="background:rgba(255,255,255,0.03)">
+      <div class="label mb-8">Summary</div>
+      <div class="small">${call.summary}</div>
+    </div>
+    <div class="card-tight" style="background:var(--navy);border:1px solid rgba(255,255,255,0.06);max-height:300px;overflow-y:auto">
+      <div class="label mb-8">Transcript</div>
+      <div class="small mono" style="white-space:pre-wrap;line-height:1.7">${call.transcript}</div>
+    </div>
+    <div class="row gap-8 mt-16">
+      <button class="btn btn-ghost" style="flex:1">${ico('download',12)}Download audio</button>
+      ${cand?`<button class="btn btn-blue" style="flex:1" onclick="closeModal();viewCandidate('${cand.id}')">${ico('user',12)}View candidate</button>`:''}
+    </div>
+  `);
+}
+
+function renderShipperAnalytics(){
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Operations Analytics</h1><p>Loads, performance, and trends across your network.</p></div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('package',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Loads This Month</div><div class="kpi-val">347</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('check-circle',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">On-Time Rate</div><div class="kpi-val">94%</div></div></div>
+      <div class="kpi"><div class="kpi-icon blue">${ico('truck',20,'style="stroke:var(--blue)"')}</div><div><div class="kpi-label">Active Carriers</div><div class="kpi-val">${SEED.carriers.filter(c=>c.status==='Active').length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon amber">${ico('clock',20,'style="stroke:var(--amber)"')}</div><div><div class="kpi-label">Avg Days to Pay</div><div class="kpi-val">12</div></div></div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:2fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-head"><h3>Loads by Carrier (last 30 days)</h3></div>
+        ${SEED.carriers.filter(c=>c.status==='Active').slice(0,5).map((c,i)=>{
+          const loads = [82,64,52,41,38][i];
+          const pct = (loads/82)*100;
+          return `<div class="mb-12">
+            <div class="row-between mb-8"><span class="small">${c.name}</span><span class="small bold">${loads} loads</span></div>
+            <div style="height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--orange);border-radius:3px"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Document expirations</h3></div>
+        ${SEED.expirations.map(e=>{
+          const c=carrier(e.carrierId);
+          return `<div class="row-between mb-12 small"><div><div>${e.type}</div><div class="muted tiny">${c.name}</div></div><span class="pill ${e.severity}"><span class="dot"></span>${e.daysLeft}d</span></div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderShipperSettings(){
+  const p = SEED.workspace.pricing;
+  const activeAddons = Object.values(SEED.workspace.modules).filter(m=>m.on&&m.tier==='addon'&&!m.soon);
+  const addonTotal = activeAddons.reduce((s,m)=>s+m.price,0);
+  const loadFeeTotal = p.loadsThisMonth * p.perLoadFee;
+  const monthlyTotal = p.basePlatformFee + loadFeeTotal + addonTotal;
+
+  return `
+  <div class="app-body narrow">
+    <div class="page-head"><div><h1>Workspace Settings</h1><p>Pricing, modules, and preferences for ${SEED.workspace.name}.</p></div></div>
+
+    <div class="card mb-16" style="background:linear-gradient(180deg,rgba(249,115,22,0.06) 0%,var(--navy3) 100%);border-color:var(--orange-border)">
+      <div class="card-head"><h3 class="serif">${ico('receipt',16)}This month so far</h3><span class="pill orange pill-live"><span class="dot"></span>Live</span></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:14px">
+        <div>
+          <div class="label">Base Platform</div>
+          <div class="value lg">${money(p.basePlatformFee)}</div>
+          <div class="tiny muted">Flat monthly</div>
+        </div>
+        <div>
+          <div class="label">Per-Load (${fmt(p.loadsThisMonth)} loads × $${p.perLoadFee})</div>
+          <div class="value lg">${money(loadFeeTotal)}</div>
+          <div class="tiny muted">Magic-link + platform-driver loads</div>
+        </div>
+        <div>
+          <div class="label">Add-ons (${activeAddons.length})</div>
+          <div class="value lg">${money(addonTotal)}</div>
+          <div class="tiny muted">${activeAddons.length>0?activeAddons.map(m=>m.name.split(' (')[0]).slice(0,2).join(', ')+(activeAddons.length>2?', +'+(activeAddons.length-2):''):'None active'}</div>
+        </div>
+        <div style="background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:8px;padding:10px 12px;margin-left:6px">
+          <div class="label" style="color:var(--orange)">Projected Total</div>
+          <div class="value lg" style="color:var(--orange);font-size:22px">${money(monthlyTotal)}</div>
+          <div class="tiny muted">For April 2026</div>
+        </div>
+      </div>
+      <div class="card-tight mt-16" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06)">
+        <div class="row gap-8">${ico('shield',14,'style="stroke:var(--g2)"')}
+          <div class="small muted">No revenue cuts. The $${p.perLoadFee} per-load fee is the same whether the load is worth $500 or $5,000 — it covers ticket processing, magic-link delivery, PDF archival, and audit trail.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-head"><h3>Pricing breakdown</h3><button class="btn btn-blue btn-sm">${ico('download',12)}Download invoice preview</button></div>
+      <table class="tbl">
+        <thead><tr><th>Line item</th><th>Detail</th><th style="text-align:right">Amount</th></tr></thead>
+        <tbody>
+          <tr><td class="bold">Base Platform Fee</td><td class="small muted">Includes Carrier Onboarding, E-Ticketing, Bid Board, Operations Analytics, magic-link drivers</td><td style="text-align:right" class="bold">${money(p.basePlatformFee)}</td></tr>
+          <tr><td class="bold">Per-Load Fee</td><td class="small muted">${fmt(p.loadsThisMonth)} loads × $${p.perLoadFee} flat — same regardless of load value</td><td style="text-align:right" class="bold">${money(loadFeeTotal)}</td></tr>
+          ${activeAddons.map(m=>`<tr><td>${m.name}</td><td class="small muted">${moduleDesc(Object.entries(SEED.workspace.modules).find(([,v])=>v===m)[0])}</td><td style="text-align:right">${money(m.price)}</td></tr>`).join('')}
+          <tr style="background:var(--orange-dim)"><td class="bold serif" style="font-size:16px">Total</td><td></td><td style="text-align:right" class="bold serif" style="font-size:18px;color:var(--orange)">${money(monthlyTotal)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Module Toggles</h3><div class="small muted">${Object.values(SEED.workspace.modules).filter(m=>m.on).length} of ${Object.keys(SEED.workspace.modules).length} modules enabled · Toggle add-ons on or off anytime</div></div>
+      ${renderModuleList(true)}
+    </div>
+  </div>`;
+}
+
+function renderModuleList(canEdit){
+  const groups = {
+    core:{label:'Core platform', sub:'Always on. Included in base platform fee.'},
+    addon:{label:'Modular add-ons', sub:'Toggle on or off. Billing applies on next cycle.'}
+  };
+  return Object.entries(groups).map(([tier,g])=>{
+    const mods = Object.entries(SEED.workspace.modules).filter(([k,m])=>m.tier===tier);
+    if(!mods.length)return '';
+    const liveCount = mods.filter(([,m])=>!m.soon).length;
+    const onCount = mods.filter(([,m])=>m.on).length;
+    return `<div class="section-block">
+      <div class="row-between mb-12">
+        <div>
+          <div class="label">${g.label}</div>
+          <div class="tiny muted">${g.sub}</div>
+        </div>
+        <span class="small muted">${onCount} of ${liveCount} on</span>
+      </div>
+      ${mods.map(([k,m])=>{
+        const isCore = m.tier==='core';
+        const tagBg = isCore?'var(--green-dim)':m.soon?'rgba(148,163,184,0.1)':m.on?'var(--orange-dim)':'rgba(255,255,255,0.04)';
+        const tagBorder = isCore?'var(--green-border)':m.soon?'rgba(148,163,184,0.2)':m.on?'var(--orange-border)':'rgba(255,255,255,0.08)';
+        const tagColor = isCore?'var(--green)':m.soon?'var(--g3)':m.on?'var(--orange)':'var(--g2)';
+        return `
+        <div class="row-between mb-12" style="padding:10px 0;border-top:1px solid rgba(255,255,255,0.04)">
+          <div style="flex:1">
+            <div class="value">${m.name}${m.soon?' <span class="pill amber tiny" style="margin-left:6px">Coming Soon</span>':''}</div>
+            <div class="small muted">${moduleDesc(k)}</div>
+          </div>
+          <div class="row gap-12" style="margin-left:14px">
+            <span style="background:${tagBg};border:1px solid ${tagBorder};color:${tagColor};font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;white-space:nowrap">${m.priceLabel}</span>
+            <div class="toggle ${m.on?'on':''} ${m.locked||m.soon||!canEdit?'disabled':''}" onclick="${canEdit&&!m.locked&&!m.soon?`toggleModule('${k}')`:''}"></div>
+          </div>
+        </div>
+      `}).join('')}
+    </div>`;
+  }).join('');
+}
+
+function moduleDesc(key){
+  const map = {
+    carrierOnboarding: 'Verify and onboard carriers — insurance, W-9, fleet, drivers',
+    eTicketing: 'Mobile e-tickets, scalehouse to delivery to invoice, magic-link drivers',
+    bidBoard: 'Private bid board — invite-only, bids private from competing carriers',
+    driverOnboarding: 'Platform-driver pipeline — application, MVR, drug test, orientation, full compliance tracking',
+    complianceGuard: 'Pre-trip inspections, DVIRs, critical-fail dispatch lockouts, photos + voice notes',
+    aiReceptionist: 'AI voice assistant for outbound and inbound driver hiring calls (EN/ES)',
+    analytics: 'Loads, on-time, performance dashboards across your network',
+    cashflow: 'POD-to-invoice automation with optional bank tie-in (PNC and others)',
+    driverRetention: 'Performance scorecards & engagement workflows that reduce turnover',
+    uptimeOptimizer: 'Predictive maintenance & breakdown trend analysis',
+    planning: 'Demand forecasting & capacity planning',
+    customAnalytics: 'Tailored KPI dashboards built around your operation'
+  };
+  return map[key]||'';
+}
+
+function toggleModule(key){
+  SEED.workspace.modules[key].on = !SEED.workspace.modules[key].on;
+  const m = SEED.workspace.modules[key];
+  if(m.on&&m.price>0){
+    showToast(`${m.name} enabled. +${money(m.price)}/mo will appear on your next invoice.`);
+  } else if(!m.on&&m.price>0){
+    showToast(`${m.name} disabled. Removed from next invoice. Data preserved.`);
+  } else {
+    showToast(`${m.name} ${m.on?'enabled':'disabled'}`);
+  }
+  renderShell();
+  renderPage();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── CARRIER PORTAL ──
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderCarrierInvitations(){
+  const cid = ROLE_CONFIG.carrier.carrierId;
+  const invitedLoads = SEED.loads.filter(l=>l.invited.includes(cid)&&l.status==='Open');
+  const myBids = SEED.loads.filter(l=>l.bids.some(b=>b.carrierId===cid));
+  const pendingInvitations = invitedLoads.filter(l=>!l.bids.some(b=>b.carrierId===cid));
+
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Bid Invitations</h1><p>Loads you've been invited to bid on. Only verified carriers see these — your bid stays private from competing carriers.</p></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('mail',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Pending Invitations</div><div class="kpi-val">${pendingInvitations.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon blue">${ico('gavel',20,'style="stroke:var(--blue)"')}</div><div><div class="kpi-label">Bids Submitted</div><div class="kpi-val">${myBids.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('check-circle',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">Awarded This Month</div><div class="kpi-val">3</div></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Open invitations</h3></div>
+      ${pendingInvitations.length===0?`<div class="empty">No pending invitations. We'll notify you when a shipper invites you.</div>`:`
+      <table class="tbl">
+        <thead><tr><th>Reference</th><th>Lane</th><th>Equipment</th><th>Pickup</th><th>Mode</th><th>Deadline</th><th></th></tr></thead>
+        <tbody>
+        ${pendingInvitations.map(l=>`
+          <tr onclick="viewLoad('${l.id}')">
+            <td class="mono bold">${l.id}</td>
+            <td>${l.origin.split(',').slice(-2,-1)[0].trim()} → ${l.dest.split(',').slice(-2,-1)[0].trim()}<div class="tiny muted">${l.distance} · ${l.commodity}</div></td>
+            <td>${l.equipment}</td>
+            <td>${l.pickup}</td>
+            <td>${l.mode==='Set Rate'?`<span class="pill orange">Set rate ${money(l.setRate)}</span>`:'<span class="pill blue">Open Bid</span>'}</td>
+            <td class="small muted">${l.deadline}</td>
+            <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();bidOnLoad('${l.id}')">${ico('gavel',12)}Bid now</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      `}
+    </div>
+  </div>`;
+}
+
+function renderCarrierBidForm(loadId){
+  const l = load(loadId);
+  if(!l)return '<div class="app-body"><div class="empty">Load not found</div></div>';
+  const isSetRate = l.mode==='Set Rate';
+  return `
+  <div class="app-body narrow">
+    <div class="row mb-16 gap-16"><button class="btn btn-ghost btn-sm" onclick="cancelBid()">${ico('arrow-left',14)}Back</button>
+      <div class="serif" style="font-size:24px;font-weight:400">Submit your bid · ${l.id}</div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card card-tight">
+        <div class="label mb-8">Lane</div>
+        <div class="value">${l.origin.split(',').slice(-2,-1)[0].trim()} → ${l.dest.split(',').slice(-2,-1)[0].trim()}</div>
+        <div class="small muted">${l.distance}</div>
+      </div>
+      <div class="card card-tight">
+        <div class="label mb-8">Equipment & volume</div>
+        <div class="value">${l.equipment}</div>
+        <div class="small muted">${l.weight} · ${l.loadCount}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      ${isSetRate?`
+      <div class="card-tight" style="background:var(--orange-dim);border:1px solid var(--orange-border);margin-bottom:16px">
+        <div class="row gap-8">${ico('flag',14,'style="stroke:var(--orange)"')}
+          <div class="small"><strong>Set Rate offer.</strong> The shipper has set a fixed rate of <strong>${money(l.setRate)}</strong> per load. You can accept this rate or decline. No bidding.</div>
+        </div>
+      </div>
+      <div class="row gap-8 mb-16">
+        <button class="btn btn-success" style="flex:1" onclick="acceptSetRate('${l.id}')">${ico('check',14)}Accept ${money(l.setRate)}</button>
+        <button class="btn btn-danger" style="flex:1" onclick="declineSetRate('${l.id}')">${ico('x',14)}Decline</button>
+      </div>
+      `:`
+      <div class="card-tight" style="background:var(--blue-dim);border:1px solid var(--blue-border);margin-bottom:16px">
+        <div class="row gap-8">${ico('eye',14,'style="stroke:var(--blue)"')}
+          <div class="small"><strong>Your bid is private.</strong> The shipper sees your bid alongside your safety score, on-time history, and consistency rating. <strong>Other invited carriers cannot see what you bid.</strong></div>
+        </div>
+      </div>
+      <div class="f-row-2">
+        <div class="f-grp"><label class="f-lbl">Your bid · per load</label><input class="f-in" id="bidAmount" placeholder="e.g. 1820" value="1820"></div>
+        <div class="f-grp"><label class="f-lbl">Per ton (auto)</label><input class="f-in" value="$11.20" disabled></div>
+      </div>
+      <div class="f-grp"><label class="f-lbl">Note to shipper (optional)</label><textarea class="f-ta" id="bidNotes" placeholder="Mention availability, dedicated trucks, special handling…"></textarea></div>
+      <div class="row mt-16 gap-8" style="justify-content:flex-end"><button class="btn btn-ghost" onclick="cancelBid()">Cancel</button><button class="btn btn-primary" onclick="submitBid('${l.id}')">${ico('gavel',14)}Submit bid</button></div>
+      `}
+    </div>
+  </div>`;
+}
+
+function cancelBid(){delete STATE.context.bidOnLoad;renderPage()}
+function submitBid(loadId){
+  const l = load(loadId);
+  const cid = ROLE_CONFIG.carrier.carrierId;
+  const amount = parseInt($('#bidAmount').value)||0;
+  const notes = $('#bidNotes').value;
+  if(!amount){showToast('Enter a bid amount');return}
+  l.bids.push({carrierId:cid, amount, perTon:'$'+(amount/26).toFixed(2)+' / ton', submittedAt:new Date().toISOString().slice(0,16).replace('T',' '), notes});
+  showToast('Bid submitted. The shipper has been notified.');
+  delete STATE.context.bidOnLoad;
+  STATE.context.viewLoad=loadId;
+  renderPage();
+}
+function acceptSetRate(loadId){
+  const l = load(loadId);
+  const cid = ROLE_CONFIG.carrier.carrierId;
+  l.bids.push({carrierId:cid, amount:l.setRate, perTon:'$'+(l.setRate/26).toFixed(2)+' / ton', submittedAt:new Date().toISOString().slice(0,16).replace('T',' '), notes:'Accepted set rate.', accepted:true});
+  showToast('Set rate accepted. Shipper has been notified.');
+  delete STATE.context.bidOnLoad;
+  STATE.context.viewLoad=loadId;
+  renderPage();
+}
+function declineSetRate(loadId){
+  showToast('Set rate declined. The shipper has been notified.');
+  delete STATE.context.bidOnLoad;
+  setTab('invitations');
+}
+
+function renderCarrierMyBids(){
+  const cid = ROLE_CONFIG.carrier.carrierId;
+  const myBids = SEED.loads.filter(l=>l.bids.some(b=>b.carrierId===cid));
+  return `
+  <div class="app-body">
+    <div class="page-head"><div><h1>My Bids</h1><p>Bids you've submitted across all your shipper invitations.</p></div></div>
+    <div class="card">
+      ${myBids.length===0?'<div class="empty">No bids submitted yet</div>':`
+      <table class="tbl">
+        <thead><tr><th>Reference</th><th>Lane</th><th>Your bid</th><th>Submitted</th><th>Status</th><th>Other bids</th></tr></thead>
+        <tbody>
+        ${myBids.map(l=>{
+          const myBid = l.bids.find(b=>b.carrierId===cid);
+          const won = l.awardedTo===cid;
+          const lost = l.awardedTo&&l.awardedTo!==cid;
+          return `<tr onclick="viewLoad('${l.id}')">
+            <td class="mono bold">${l.id}</td>
+            <td>${l.origin.split(',').slice(-2,-1)[0].trim()} → ${l.dest.split(',').slice(-2,-1)[0].trim()}</td>
+            <td class="bold">${money(myBid.amount)}</td>
+            <td class="small muted">${myBid.submittedAt}</td>
+            <td>${won?'<span class="pill green"><span class="dot"></span>Awarded to you</span>':lost?'<span class="pill red"><span class="dot"></span>Awarded to other</span>':'<span class="pill blue"><span class="dot"></span>Awaiting decision</span>'}</td>
+            <td class="muted small">Hidden until award</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      `}
+    </div>
+  </div>`;
+}
+
+function renderCarrierAwarded(){
+  const cid = ROLE_CONFIG.carrier.carrierId;
+  const awarded = SEED.loads.filter(l=>l.awardedTo===cid);
+  return `
+  <div class="app-body">
+    <div class="page-head"><div><h1>Awarded Loads</h1><p>Loads where you won the bid. Coordinate with your dispatch and drivers below.</p></div></div>
+    <div class="card">
+      ${awarded.length===0?'<div class="empty">No awarded loads yet</div>':`
+      <table class="tbl">
+        <thead><tr><th>Reference</th><th>Lane</th><th>Equipment</th><th>Pickup</th><th>Status</th><th>Awarded amount</th></tr></thead>
+        <tbody>
+        ${awarded.map(l=>{
+          const myBid = l.bids.find(b=>b.carrierId===cid);
+          return `<tr onclick="viewLoad('${l.id}')">
+            <td class="mono bold">${l.id}</td>
+            <td>${l.origin.split(',').slice(-2,-1)[0].trim()} → ${l.dest.split(',').slice(-2,-1)[0].trim()}<div class="tiny muted">${l.commodity}</div></td>
+            <td>${l.equipment}</td>
+            <td>${l.pickup}</td>
+            <td><span class="pill ${l.status==='In Progress'?'amber pill-live':'green'}"><span class="dot"></span>${l.status}</span></td>
+            <td class="bold">${money(myBid.amount)}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      `}
+    </div>
+  </div>`;
+}
+
+function renderCarrierFleet(){
+  const cid = ROLE_CONFIG.carrier.carrierId;
+  const c = carrier(cid);
+  const myDrivers = SEED.drivers.filter(d=>d.carrierId===cid);
+  const myTrucks = SEED.trucks.filter(t=>t.carrierId===cid);
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Fleet & Drivers</h1><p>Manage your trucks, trailers, and drivers. The platform syncs this with your shipper-facing profile.</p></div>
+      <div class="page-head-cta"><button class="btn btn-primary">${ico('plus',14)}Add truck</button></div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-head"><h3>${ico('truck',14)}Trucks (${myTrucks.length})</h3></div>
+        <table class="tbl">
+          <thead><tr><th>ID</th><th>Plate</th><th>Driver</th><th>Status</th></tr></thead>
+          <tbody>
+          ${myTrucks.map(t=>{
+            const d = t.driverId?driver(t.driverId):null;
+            return `<tr><td class="mono bold">${t.id}</td><td class="small muted">${t.plate}</td><td>${d?d.name:'<span class="muted">Unassigned</span>'}</td><td><span class="pill ${t.status==='Available'?'green':'amber pill-live'}"><span class="dot"></span>${t.status}</span></td></tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>${ico('user',14)}Drivers (${myDrivers.length})</h3></div>
+        <table class="tbl">
+          <thead><tr><th>Name</th><th>CDL</th><th>Lang</th><th>Status</th></tr></thead>
+          <tbody>
+          ${myDrivers.map(d=>`<tr onclick="viewDriver('${d.id}')"><td class="bold">${d.name}</td><td class="small mono">${d.cdl}</td><td>${d.language}</td><td><span class="pill ${d.status==='Active'?'green':'amber'}"><span class="dot"></span>${d.status}</span></td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function viewDriver(id){STATE.context.viewDriver=id;renderPage();window.scrollTo(0,0)}
+function backFromDriver(){delete STATE.context.viewDriver;renderPage()}
+
+function renderDriverDetail(id){
+  const d = driver(id);
+  const c = carrier(d.carrierId);
+  const steps = [
+    {name:'Initial Connect', done:true},
+    {name:'Documents', done:d.cdl&&d.medical&&d.medical!=='Pending'},
+    {name:'MVR Record', done:d.mvr&&!d.mvr.includes('—')},
+    {name:'Drug Test', done:d.drugTest==='Passed'||d.drugTest?.includes('Passed')},
+    {name:'Orientation', done:d.orientation?.includes('Completed')}
+  ];
+  return `
+  <div class="app-body">
+    <div class="row mb-16 gap-16"><button class="btn btn-ghost btn-sm" onclick="backFromDriver()">${ico('arrow-left',14)}Back</button></div>
+
+    <div class="card mb-16">
+      <div class="row-between mb-16">
+        <div class="row gap-16">
+          <div style="width:48px;height:48px;background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:10px;display:flex;align-items:center;justify-content:center">${ico('user',22,'style="stroke:var(--orange)"')}</div>
+          <div><div class="serif" style="font-size:24px;font-weight:600">${d.name}</div>
+          <div class="row gap-8 mt-12"><span class="pill ${d.status==='Active'?'green':'amber'}"><span class="dot"></span>${d.status}</span><span class="small muted">${d.phone} · ${d.language}</span></div></div>
+        </div>
+      </div>
+
+      <div class="card-tight" style="background:rgba(255,255,255,0.02)">
+        <div class="text-center mb-16 small bold">Onboarding Progress</div>
+        <div class="prog-wrap">
+          ${steps.map(s=>`<div class="prog-step ${s.done?'done':'active'}">
+            <div class="prog-circle">${s.done?ico('check',16,'style="stroke:var(--green)"'):ico('clock',14,'style="stroke:var(--orange)"')}</div>
+            <div class="prog-name">${s.name}</div>
+            <div class="prog-status ${s.done?'complete':'pending'}">${s.done?'Complete':'Pending'}</div>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div class="card">
+        <div class="card-head"><h3>Driver Info</h3></div>
+        <div class="detail-item"><div class="label">Carrier</div><div class="value">${c.name}</div></div>
+        <div class="detail-item"><div class="label">CDL</div><div class="value mono">${d.cdl}</div></div>
+        <div class="detail-item"><div class="label">Medical</div><div class="value">${d.medical}</div></div>
+        <div class="detail-item"><div class="label">MVR</div><div class="value">${d.mvr}</div></div>
+        <div class="detail-item"><div class="label">Drug test</div><div class="value">${d.drugTest}</div></div>
+        <div class="detail-item"><div class="label">Orientation</div><div class="value">${d.orientation}</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Activity Timeline</h3></div>
+        <div class="section-block"><div class="row-between"><div class="small">Initial verification call · CONTACTED</div><div class="tiny muted">Apr 16 5:08 PM</div></div></div>
+        <div class="section-block"><div class="row-between"><div class="small">Status changed: NEW → CONTACTED</div><div class="tiny muted">Apr 16 5:07 PM</div></div></div>
+        <div class="section-block"><div class="row-between"><div class="small">New driver lead created</div><div class="tiny muted">Apr 16 5:01 PM</div></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCarrierProfile(){
+  const c = carrier(ROLE_CONFIG.carrier.carrierId);
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Company Profile</h1><p>How shippers see you on the platform. Keep this current — it directly affects which bid invitations you receive.</p></div>
+      <div class="page-head-cta"><button class="btn btn-ghost">${ico('edit',14)}Edit</button></div>
+    </div>
+    ${renderCarrierDetail(c.id).replace('<div class="row mb-16 gap-16">','<div class="row mb-16 gap-16" style="display:none">')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── DRIVER (PLATFORM) ── shift, inspection, magic link
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderDriverShift(){
+  const dr = SEED.drivers.find(d=>d.id===ROLE_CONFIG.driver.driverId);
+  const sh = SEED.shift;
+  const cgOn = SEED.workspace.modules.complianceGuard.on;
+  const reports = SEED.inspectionReports.filter(r=>r.driverId===dr.id);
+  return `
+  <div class="app-body narrow" style="padding-top:32px">
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+      <div class="card text-center" style="padding:32px 22px">
+        <div style="width:72px;height:72px;border-radius:14px;background:${sh.active?'var(--green-dim)':'rgba(255,255,255,0.04)'};border:1px solid ${sh.active?'var(--green-border)':'rgba(255,255,255,0.08)'};display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px">
+          <svg class="ico" width="32" height="32" style="stroke:${sh.active?'var(--green)':'var(--g2)'}"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </div>
+        <div class="serif" style="font-size:22px;font-weight:600;margin-bottom:6px">${sh.active?'End my shift':'Start my shift'}</div>
+        <span class="pill ${sh.active?'green pill-live':'red'}" style="margin-bottom:18px"><span class="dot"></span>${sh.active?'Active':'Inactive'}</span>
+        <button class="btn ${sh.active?'btn-danger':'btn-blue'} btn-lg" style="width:100%;margin-top:8px" onclick="toggleShift()">${sh.active?'End shift':'Start my shift'}</button>
+      </div>
+      <div>
+        <div class="card mb-12">
+          <div class="label mb-8">Carrier</div>
+          <div class="value">${carrier(dr.carrierId).name}</div>
+        </div>
+        <div class="card">
+          <div class="row gap-8"><span style="background:var(--blue-dim);border-radius:6px;padding:6px;display:inline-flex">${ico('truck',16,'style="stroke:var(--blue)"')}</span><div><div class="label">Truck</div><div class="value">${dr.truckId}</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    ${cgOn?`
+    <div class="card mb-16">
+      <div class="text-center" style="padding:24px 16px">
+        <div style="width:56px;height:56px;border-radius:50%;border:2px solid ${sh.active?'var(--green)':'rgba(255,255,255,0.12)'};display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px">
+          ${sh.inspectionComplete?ico('check-circle',28,'style="stroke:var(--green)"'):ico('clipboard',28,'style="stroke:'+(sh.active?'var(--orange)':'var(--g3)')+'"')}
+        </div>
+        <div class="serif" style="font-size:18px;font-weight:600;margin-bottom:6px">${sh.inspectionComplete?'Inspection Complete':'Truck Inspection Available'}</div>
+        <div class="small muted">${!sh.active?'Start your shift to begin the daily truck inspection':sh.inspectionComplete?'You\'re cleared to run loads — see Active Load tab':'Tap below to begin your pre-trip inspection'}</div>
+        ${sh.active&&!sh.inspectionComplete?`<button class="btn btn-primary btn-lg mt-16" onclick="setTab('inspection')">${ico('clipboard',14)}Begin inspection</button>`:''}
+        ${sh.inspectionComplete?`<button class="btn btn-success mt-16" onclick="setTab('magiclink')">${ico('link',14)}View active load</button>`:''}
+      </div>
+    </div>
+    `:`
+    <div class="card mb-16" style="border-color:var(--amber-border);background:var(--amber-dim)">
+      <div class="row gap-8">${ico('shield',16,'style="stroke:var(--amber)"')}<div class="small"><strong>Compliance Guard is off</strong> — pre-trip inspection is disabled in your workspace settings. Driver can run loads without inspection in this mode.</div></div>
+    </div>
+    `}
+
+    <div class="card">
+      <div class="card-head"><h3>${ico('doc',14)}Inspection Reports</h3></div>
+      <div class="small muted mb-16">Access your inspection reports to show DOT officers. Reports are valid for 24 hours from the inspection date.</div>
+      ${reports.length===0?'<div class="empty">No inspection reports yet</div>':reports.map(r=>`
+        <div class="row-between section-block">
+          <div class="row gap-8">${ico('clock',14,'style="stroke:var(--g3)"')}<div><div class="value" style="font-size:13px">${new Date(r.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</div><div class="tiny muted">Truck ${r.truckId} · ${r.mode}</div></div></div>
+          ${r.status==='Cleared'?`<button class="btn btn-ghost btn-sm">${ico('eye',12)}View report</button>`:`<span class="pill red"><span class="dot"></span>${r.status}</span>`}
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function toggleShift(){
+  SEED.shift.active = !SEED.shift.active;
+  if(SEED.shift.active){
+    SEED.shift.startedAt = new Date().toISOString();
+    showToast('Shift started. Pre-trip inspection unlocked.');
+  } else {
+    SEED.shift.startedAt = null;
+    SEED.shift.inspectionStarted = false;
+    SEED.shift.inspectionComplete = false;
+    SEED.shift.inspectionResults = {};
+    showToast('Shift ended. See you tomorrow.');
+  }
+  renderPage();
+}
+
+function renderDriverInspection(){
+  const sh = SEED.shift;
+  const sections = SEED.inspectionSections;
+  if(!sh.active){
+    return `<div class="app-body narrow"><div class="card text-center" style="padding:48px 22px"><div style="font-family:'Playfair Display',serif;font-size:22px;margin-bottom:12px">Start your shift first</div><div class="small muted mb-16">The pre-trip inspection unlocks once you start your shift.</div><button class="btn btn-primary" onclick="setTab('shift')">${ico('arrow-left',14)}Back to shift</button></div></div>`;
+  }
+  return `
+  <div class="app-body narrow" style="padding-top:24px">
+    <div class="card mb-16">
+      <div class="row-between mb-12">
+        <div><div class="label">Truck</div><div class="value lg">${sh.truckId}</div></div>
+        <div class="row gap-8"><span class="small muted">Inspection Mode</span>
+          <div class="row" style="background:rgba(255,255,255,0.05);border-radius:6px;padding:2px">
+            <button class="btn btn-sm" style="background:${sh.inspectionMode==='Risk-First'?'var(--blue)':'transparent'};color:white" onclick="setInspMode('Risk-First')">Risk-First</button>
+            <button class="btn btn-sm" style="background:${sh.inspectionMode==='Location-Based'?'var(--blue)':'transparent'};color:white" onclick="setInspMode('Location-Based')">Location-Based</button>
+          </div>
+        </div>
+      </div>
+      <div class="small muted">Tap each section. Mark items pass or fail. Failed items require a note, photo, and severity. Critical fails will lock dispatch.</div>
+    </div>
+
+    <div class="serif mb-16" style="font-size:18px;font-weight:600">Truck Inspection</div>
+
+    ${sections.map(sec=>renderInspectionSection(sec)).join('')}
+
+    <div class="card mt-16">
+      <div class="card-head"><h3>Driver Signature</h3></div>
+      <div class="small muted mb-12">Sign with your finger or stylus to confirm inspection completion.</div>
+      <div class="signature-pad" id="inspSigPad" onmousedown="startInspSig(event)" onmousemove="drawInspSig(event)" onmouseup="endInspSig()" onmouseleave="endInspSig()" ontouchstart="startInspSig(event)" ontouchmove="drawInspSig(event)" ontouchend="endInspSig()">
+        <span id="inspSigPlaceholder">Tap to sign</span>
+        <canvas id="inspSigCanvas" width="640" height="120"></canvas>
+      </div>
+      <div class="row gap-8 mt-12">
+        <button class="btn btn-ghost btn-sm" style="flex:1" onclick="clearInspSig()">${ico('x',12)}Clear</button>
+        <button class="btn btn-blue btn-sm" style="flex:2" onclick="completeInspection()">${ico('check',12)}Save & complete inspection</button>
+      </div>
+      <div class="row gap-8 mt-12 small">${ico('check',14,'style="stroke:var(--blue)"')}<span>I agree that I have completed the inspection to the best of my knowledge and have reported all issues found.</span></div>
+    </div>
+  </div>`;
+}
+
+function renderInspectionSection(sec){
+  const result = SEED.shift.inspectionResults[sec.id]||{state:'pending', items:{}};
+  const failedCount = Object.values(result.items||{}).filter(i=>i.status==='fail').length;
+  const isCollapsed = result.state!=='expanded';
+  const isPass = result.state==='pass';
+  const hasIssue = failedCount>0;
+  const bg = isPass?'#10B981':hasIssue?'#EF4444':'rgba(255,255,255,0.04)';
+  const border = isPass?'var(--green)':hasIssue?'var(--red)':'rgba(255,255,255,0.08)';
+  return `
+  <div class="mb-12">
+    <div class="small muted mb-8" style="margin-left:4px">${sec.name}</div>
+    <div style="background:${bg};border:1px solid ${border};border-radius:8px;overflow:hidden">
+      <div class="row-between" style="padding:12px 14px;cursor:pointer" onclick="toggleInspSection('${sec.id}')">
+        <div class="row gap-8">${isPass?ico('check-circle',16,'style="stroke:white"'):hasIssue?ico('x',16,'style="stroke:white"'):ico('clipboard',16,'style="stroke:var(--g2)"')}<strong style="color:${isPass||hasIssue?'white':'var(--g1)'}">${sec.name}</strong></div>
+        <div class="row gap-8">${hasIssue?`<span class="small" style="color:white">${failedCount} issue${failedCount>1?'s':''}</span>`:''}<svg width="14" height="14" style="stroke:${isPass||hasIssue?'white':'var(--g3)'};transform:rotate(${isCollapsed?'0':'180'}deg);transition:transform .2s" fill="none" stroke-width="1.6" stroke-linecap="round"><path d="M3 5l4 4 4-4"/></svg></div>
+      </div>
+      ${!isCollapsed?`<div style="padding:0 14px 14px 14px;background:rgba(0,0,0,0.15)">
+        ${sec.items.map(item=>renderInspectionItem(sec.id, item, result.items[item])).join('')}
+        <div class="row gap-8 mt-12">
+          <button class="btn btn-success btn-sm" style="flex:1" onclick="markSection('${sec.id}','pass')">${ico('check',12)}All Pass</button>
+        </div>
+      </div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderInspectionItem(sectionId, item, state){
+  const itemKey = item.replace(/[^a-zA-Z0-9]/g,'');
+  const status = state?.status;
+  const note = state?.note||'';
+  return `
+  <div style="background:rgba(0,0,0,0.25);border:1px solid ${status==='pass'?'var(--green)':status==='fail'?'var(--red)':'rgba(255,255,255,0.08)'};border-radius:6px;padding:10px 12px;margin-bottom:8px">
+    <div class="row-between">
+      <span class="small bold">${item}</span>
+      <div class="row gap-8">
+        <button class="btn btn-sm" style="background:${status==='pass'?'var(--green)':'rgba(255,255,255,0.05)'};color:white;padding:4px 10px" onclick="markItem('${sectionId}','${item}','pass')">${ico('check',10)}Pass</button>
+        <button class="btn btn-sm" style="background:${status==='fail'?'var(--red)':'rgba(255,255,255,0.05)'};color:white;padding:4px 10px" onclick="markItem('${sectionId}','${item}','fail')">${ico('x',10)}Fail</button>
+      </div>
+    </div>
+    ${status==='fail'?`
+    <div class="mt-12">
+      <textarea class="f-ta" style="font-size:12px;min-height:60px" placeholder="Notes (required for failed items)" oninput="setItemNote('${sectionId}','${item}',this.value)">${note}</textarea>
+      <div class="row gap-8 mt-12">
+        <button class="btn btn-ghost btn-sm" style="flex:1">${ico('upload',12)}Take photo</button>
+        <button class="btn btn-ghost btn-sm" style="flex:1">${ico('mic',12)}Voice note</button>
+        <select class="f-sel btn-sm" style="flex:1;font-size:11px;padding:5px 24px 5px 10px" onchange="setItemSeverity('${sectionId}','${item}',this.value)">
+          <option>Severity</option><option>Minor</option><option>Major</option><option>Critical</option>
+        </select>
+      </div>
+    </div>`:''}
+  </div>`;
+}
+
+function setInspMode(mode){SEED.shift.inspectionMode=mode;renderPage()}
+function toggleInspSection(secId){
+  const r = SEED.shift.inspectionResults[secId]||{state:'pending', items:{}};
+  r.state = r.state==='expanded'?'pending':'expanded';
+  SEED.shift.inspectionResults[secId] = r;
+  renderPage();
+}
+function markSection(secId,state){
+  const r = SEED.shift.inspectionResults[secId]||{items:{}};
+  r.state = state;
+  // mark all items pass
+  if(state==='pass'){
+    const sec = SEED.inspectionSections.find(s=>s.id===secId);
+    sec.items.forEach(item=>{r.items[item]={status:'pass'}});
+  }
+  SEED.shift.inspectionResults[secId] = r;
+  renderPage();
+}
+function markItem(secId,item,status){
+  const r = SEED.shift.inspectionResults[secId]||{state:'expanded', items:{}};
+  r.items[item] = {...(r.items[item]||{}), status};
+  // if any item fails, section state becomes fail
+  const anyFail = Object.values(r.items).some(i=>i.status==='fail');
+  const allPass = SEED.inspectionSections.find(s=>s.id===secId).items.every(i=>r.items[i]?.status==='pass');
+  if(allPass)r.state='pass';
+  else if(anyFail)r.state='expanded';
+  SEED.shift.inspectionResults[secId] = r;
+  renderPage();
+}
+function setItemNote(secId,item,note){
+  const r = SEED.shift.inspectionResults[secId];
+  if(r&&r.items[item])r.items[item].note=note;
+}
+function setItemSeverity(secId,item,sev){
+  const r = SEED.shift.inspectionResults[secId];
+  if(r&&r.items[item])r.items[item].severity=sev;
+  // if Critical, flag truck to compliance
+  if(sev==='Critical'){
+    showToast('Critical issue logged. Truck will be flagged Restricted on submit.');
+  }
+}
+
+let inspSigCtx, inspSigDrawing=false, inspSigStarted=false;
+function startInspSig(e){
+  e.preventDefault();
+  const canvas = $('#inspSigCanvas');
+  if(!inspSigCtx){inspSigCtx = canvas.getContext('2d');inspSigCtx.strokeStyle='#0B1220';inspSigCtx.lineWidth=2;inspSigCtx.lineCap='round'}
+  if(!inspSigStarted){$('#inspSigPlaceholder').style.display='none';inspSigStarted=true;$('#inspSigPad').classList.add('signed')}
+  inspSigDrawing=true;
+  const r = canvas.getBoundingClientRect();
+  const ev = e.touches?e.touches[0]:e;
+  inspSigCtx.beginPath();
+  inspSigCtx.moveTo((ev.clientX-r.left)*(canvas.width/r.width), (ev.clientY-r.top)*(canvas.height/r.height));
+}
+function drawInspSig(e){
+  if(!inspSigDrawing)return;
+  e.preventDefault();
+  const canvas = $('#inspSigCanvas');
+  const r = canvas.getBoundingClientRect();
+  const ev = e.touches?e.touches[0]:e;
+  inspSigCtx.lineTo((ev.clientX-r.left)*(canvas.width/r.width), (ev.clientY-r.top)*(canvas.height/r.height));
+  inspSigCtx.stroke();
+}
+function endInspSig(){inspSigDrawing=false}
+function clearInspSig(){const c=$('#inspSigCanvas');if(inspSigCtx)inspSigCtx.clearRect(0,0,c.width,c.height);$('#inspSigPlaceholder').style.display='';inspSigStarted=false;$('#inspSigPad').classList.remove('signed')}
+
+function completeInspection(){
+  const sections = SEED.inspectionSections;
+  // check all sections have a state of pass or have items marked
+  const incomplete = sections.filter(s=>{
+    const r = SEED.shift.inspectionResults[s.id];
+    if(!r)return true;
+    if(r.state==='pass')return false;
+    return s.items.some(i=>!r.items[i]);
+  });
+  if(incomplete.length>0){
+    showToast(`Mark all items in: ${incomplete.map(s=>s.name).slice(0,2).join(', ')}${incomplete.length>2?'…':''}`);
+    return;
+  }
+  if(!inspSigStarted){showToast('Please sign before completing the inspection');return;}
+
+  // check for critical fails
+  let criticalFail = false;
+  Object.values(SEED.shift.inspectionResults).forEach(r=>{
+    Object.values(r.items||{}).forEach(i=>{
+      if(i.status==='fail'&&i.severity==='Critical')criticalFail=true;
+    });
+  });
+
+  SEED.shift.inspectionComplete = true;
+
+  // log report
+  SEED.inspectionReports.unshift({
+    id:'ir'+Date.now(),
+    driverId:ROLE_CONFIG.driver.driverId,
+    truckId:SEED.shift.truckId,
+    date:new Date().toISOString().slice(0,10),
+    status:criticalFail?'Restricted — Pending Admin Review':'Cleared',
+    issues:Object.values(SEED.shift.inspectionResults).reduce((sum,r)=>sum+Object.values(r.items||{}).filter(i=>i.status==='fail').length,0),
+    signed:true,
+    mode:SEED.shift.inspectionMode
+  });
+
+  // if critical fail, add to truck compliance
+  if(criticalFail){
+    const failedItems = [];
+    Object.entries(SEED.shift.inspectionResults).forEach(([secId,r])=>{
+      const sec = SEED.inspectionSections.find(s=>s.id===secId);
+      Object.entries(r.items||{}).forEach(([item,d])=>{
+        if(d.status==='fail')failedItems.push({section:sec.name,item,severity:d.severity||'Major',note:d.note||''});
+      });
+    });
+    SEED.truckCompliance.unshift({
+      truckId:SEED.shift.truckId,
+      carrierName:carrier(SEED.drivers.find(d=>d.id===ROLE_CONFIG.driver.driverId).carrierId).name,
+      plate:truck(SEED.shift.truckId)?.plate||'—',
+      vin:'—',
+      issues:failedItems.length,
+      status:'Restricted',
+      lastInspection:new Date().toISOString().slice(0,10),
+      adminNotes:'',
+      issueDetails:failedItems
+    });
+    showToast(`CRITICAL fail logged. Truck ${SEED.shift.truckId} flagged Restricted. Dispatch locked until admin approves.`);
+  } else {
+    showToast('Inspection complete and signed. You\'re cleared to run loads.');
+  }
+  setTab('shift');
+}
+
+function renderDriverMagicLink(){
+  const sh = SEED.shift;
+  const cgOn = SEED.workspace.modules.complianceGuard.on;
+  if(cgOn&&!sh.inspectionComplete){
+    return `<div class="app-body narrow"><div class="card text-center" style="padding:48px 22px"><div class="serif" style="font-size:22px;margin-bottom:12px">Inspection required first</div><div class="small muted mb-16">Compliance Guard is on. You need to complete your pre-trip inspection before you can run a load.</div><button class="btn btn-primary" onclick="setTab('inspection')">${ico('clipboard',14)}Begin inspection</button></div></div>`;
+  }
+  const t = SEED.tickets.find(x=>x.driverId==='d1'&&(x.status==='Activated'||x.status==='In Transit'))||SEED.tickets[2];
+  return renderMagicLinkCore(t, 'Marco Garcia', 'Lone Star Hauling LLC', 'Español');
+}
+
+function renderMagicLinkOnly(){
+  // generic third-party driver who has only received a text. No shift, no inspection.
+  const t = SEED.tickets.find(x=>x.status==='Activated')||SEED.tickets[3];
+  return `<div class="app-body" style="padding-top:24px">
+  <div class="card mb-24" style="max-width:520px;margin-left:auto;margin-right:auto;background:var(--amber-dim);border-color:var(--amber-border)">
+    <div class="row gap-8">${ico('shield',16,'style="stroke:var(--amber)"')}<div class="small"><strong>Magic-Link Only Driver.</strong> This driver was hired by the carrier (Bayou Belly Dumps), not by you. Carry Ops doesn't track their CDL, medical, MVR, or drug test — that's the carrier's responsibility. We just need a phone number to send the magic link.</div></div>
+  </div>
+  ${renderMagicLinkCore(t, 'Pete Kowalski', 'Bayou Belly Dumps', 'English')}
+  </div>`;
+}
+
+function renderMagicLinkCore(t, name, carrierName, lang){
+  const truckObj = truck(t.truckId);
+  return `
+  <div class="${STATE.role==='magiclink'?'':'app-body'}" style="padding-top:32px">
+    <div class="text-center mb-24">
+      <div class="small muted mb-8">${ico('mail',12)} <span style="vertical-align:middle">SMS · Just now</span></div>
+      <div class="serif" style="font-size:22px;font-weight:400;color:var(--g1);max-width:380px;margin:0 auto">"You have a load. Tap to view: <span style="color:var(--orange)">carryops.io/t/${t.id}</span>"</div>
+    </div>
+
+    <div class="phone">
+      <div class="phone-bar"><span>9:41 AM</span><span>📶 5G</span></div>
+      <div class="phone-screen">
+        <div class="text-center mb-16">
+          <div class="small muted">Carry Ops · Magic Link</div>
+          <div class="serif" style="font-size:18px;font-weight:600;margin-top:6px">${lang==='Español'?'Hola '+name.split(' ')[0]+' 👋':'Hi '+name.split(' ')[0]+' 👋'}</div>
+          <div class="small muted">${t.id} · ${carrierName}</div>
+        </div>
+
+        <div class="card-tight mb-16" style="background:rgba(16,185,129,0.06);border:1px solid var(--green-border)">
+          <div class="row gap-8">${ico('truck',14,'style="stroke:var(--green)"')}<div class="small"><strong>Truck ${t.truckId}</strong> · ${truckObj?.plate||''}</div></div>
+        </div>
+
+        <div class="section-block" style="padding:12px 0">
+          <div class="row gap-8 mb-8">${ico('pin',14,'style="stroke:var(--green)"')}<span class="label">Pickup</span></div>
+          <div class="value" style="font-size:13px">${t.pickup}</div>
+          <div class="tiny muted mt-12">1500 Industrial Blvd, Houston, TX</div>
+        </div>
+
+        <div class="section-block" style="padding:12px 0">
+          <div class="row gap-8 mb-8">${ico('flag',14,'style="stroke:var(--orange)"')}<span class="label">Destination</span></div>
+          <div class="value" style="font-size:13px">${t.dest}</div>
+          <div class="tiny muted mt-12">2200 Conroe Park, Conroe, TX</div>
+        </div>
+
+        <div style="height:120px;background:linear-gradient(135deg,#0F172A,#1E293B);border:1px solid rgba(255,255,255,0.08);border-radius:8px;position:relative;overflow:hidden;margin:12px 0">
+          <svg width="100%" height="100%" viewBox="0 0 280 120" preserveAspectRatio="none">
+            <defs><pattern id="grid${t.id}" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs>
+            <rect width="100%" height="100%" fill="url(#grid${t.id})"/>
+            <path d="M 30 95 Q 90 60, 140 75 T 250 25" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 3"/>
+            <circle cx="30" cy="95" r="6" fill="var(--green)"/>
+            <circle cx="250" cy="25" r="6" fill="var(--orange)"/>
+          </svg>
+          <div style="position:absolute;bottom:6px;left:8px;font-size:9px;color:var(--g3)">Open in Google Maps →</div>
+        </div>
+
+        <button class="btn btn-blue" style="width:100%;margin-bottom:8px">${ico('pin',14)}Start navigation</button>
+
+        <div class="section-block" style="padding:12px 0">
+          <div class="row gap-8 mb-8">${ico('upload',14,'style="stroke:var(--g2)"')}<span class="label">Documents (optional)</span></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%">${ico('upload',12)}Upload BOL or photo</button>
+        </div>
+
+        <div class="section-block" style="padding:12px 0">
+          <div class="row gap-8 mb-8">${ico('edit',14,'style="stroke:var(--orange)"')}<span class="label">Signature at delivery</span></div>
+          <div class="signature-pad" id="sigPad" onmousedown="startSig(event)" onmousemove="drawSig(event)" onmouseup="endSig()" onmouseleave="endSig()" ontouchstart="startSig(event)" ontouchmove="drawSig(event)" ontouchend="endSig()">
+            <span id="sigPlaceholder">Tap to sign</span>
+            <canvas id="sigCanvas" width="280" height="120"></canvas>
+          </div>
+          <div class="row mt-12 gap-8"><button class="btn btn-ghost btn-sm" style="flex:1" onclick="clearSig()">Clear</button><button class="btn btn-primary btn-sm" style="flex:1" onclick="confirmDelivery('${t.id}')">${ico('check',12)}Confirm delivery</button></div>
+        </div>
+
+        <div class="text-center mt-16">
+          <div class="tiny muted">${lang==='Español'?'Idioma':'Language'}: <span style="color:var(--orange)">${lang} ▾</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-24" style="max-width:520px;margin-left:auto;margin-right:auto">
+      <div class="small muted text-center"><strong>How this works:</strong> the scalehouse activates the ticket, a magic link gets texted to the driver and emailed to the destination attendant. The driver does <strong>nothing</strong> except tap the link, follow the route, and sign at delivery. No QR codes. No app downloads.</div>
+    </div>
+  </div>`;
+}
+
+let sigCtx, sigDrawing=false, sigStarted=false;
+function startSig(e){
+  e.preventDefault();
+  const canvas = $('#sigCanvas');
+  if(!sigCtx){sigCtx = canvas.getContext('2d');sigCtx.strokeStyle='#0B1220';sigCtx.lineWidth=2;sigCtx.lineCap='round'}
+  if(!sigStarted){$('#sigPlaceholder').style.display='none';sigStarted=true;$('#sigPad').classList.add('signed')}
+  sigDrawing=true;
+  const r = canvas.getBoundingClientRect();
+  const ev = e.touches?e.touches[0]:e;
+  sigCtx.beginPath();
+  sigCtx.moveTo((ev.clientX-r.left)*(canvas.width/r.width), (ev.clientY-r.top)*(canvas.height/r.height));
+}
+function drawSig(e){
+  if(!sigDrawing)return;
+  e.preventDefault();
+  const canvas = $('#sigCanvas');
+  const r = canvas.getBoundingClientRect();
+  const ev = e.touches?e.touches[0]:e;
+  sigCtx.lineTo((ev.clientX-r.left)*(canvas.width/r.width), (ev.clientY-r.top)*(canvas.height/r.height));
+  sigCtx.stroke();
+}
+function endSig(){sigDrawing=false}
+function clearSig(){const c=$('#sigCanvas');if(sigCtx)sigCtx.clearRect(0,0,c.width,c.height);$('#sigPlaceholder').style.display='';sigStarted=false;$('#sigPad').classList.remove('signed')}
+function confirmDelivery(tid){
+  const t = ticket(tid);
+  if(!t){showToast('Ticket not found');return}
+  if(!sigStarted){showToast('Please sign before confirming');return}
+  t.driverSigned=true;
+  t.status='Awaiting Attendant';
+  showToast('Delivery confirmed. Destination attendant has been notified to verify weight and sign off.');
+}
+
+/* CANDIDATE detail (driver pipeline) */
+function renderCandidateDetail(id){
+  const c = SEED.driverCandidates.find(x=>x.id===id);
+  if(!c)return '<div class="app-body"><div class="empty">Candidate not found</div></div>';
+  const stages = ['Initial Connect','Documents','MVR Record','Drug Test','Orientation'];
+  const stageIdx = stages.indexOf(c.stage);
+  const aiCalls = SEED.aiCalls.filter(call=>call.candidateId===c.id);
+  const aiOn = SEED.workspace.modules.aiReceptionist.on;
+  return `
+  <div class="app-body">
+    <div class="row mb-16 gap-16"><button class="btn btn-ghost btn-sm" onclick="backFromCandidate()">${ico('arrow-left',14)}Back to Pipeline</button></div>
+
+    <div class="row-between mb-16">
+      <div><div class="serif" style="font-size:32px;font-weight:600">${c.name}</div><div class="row gap-8 mt-12"><span class="pill blue"><span class="dot"></span>${c.status}</span><span class="small muted">${c.phone} · ${c.email}</span></div></div>
+      <button class="btn btn-danger btn-sm">${ico('x',12)}Delete Application</button>
+    </div>
+
+    <div class="card mb-16">
+      <div class="text-center mb-16 small bold">Onboarding Progress</div>
+      <div class="prog-wrap">
+        ${stages.map((s,i)=>`<div class="prog-step ${i<stageIdx?'done':i===stageIdx?'active':''}">
+          <div class="prog-circle">${i<stageIdx?ico('check',16,'style="stroke:var(--green)"'):i===stageIdx?ico('clock',14,'style="stroke:var(--orange)"'):'<span style="color:var(--g3)">○</span>'}</div>
+          <div class="prog-name">${s}</div>
+          <div class="prog-status ${i<stageIdx?'complete':i===stageIdx?'pending':''}">${i<stageIdx?'Complete':i===stageIdx?(c.stage===s?c.status:'In Progress'):'Not Started'}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div class="card mb-16">
+          <div class="card-head"><h3>${ico('user',14)}Candidate Information</h3><button class="btn btn-ghost btn-sm">${ico('edit',12)}Edit</button></div>
+          <div class="detail-item"><div class="label">Name</div><div class="value">${c.name}</div></div>
+          <div class="detail-item"><div class="label">Phone</div><div class="value">${c.phone}</div></div>
+          <div class="detail-item"><div class="label">Email</div><div class="value">${c.email}</div></div>
+          <div class="detail-item"><div class="label">Source</div><div class="value">${c.source}</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>${ico('building',14)}Application Information</h3><button class="btn btn-ghost btn-sm">${ico('edit',12)}Edit</button></div>
+          <div class="detail-item"><div class="label">Yard</div><div class="value">${c.yard}</div></div>
+          <div class="detail-item"><div class="label">Position</div><div class="value">${c.position}</div></div>
+          <div class="detail-item"><div class="label">Language</div><div class="value">${c.language}</div></div>
+          <div class="detail-item"><div class="label">Applied</div><div class="value">${c.applied}</div></div>
+        </div>
+      </div>
+      <div>
+        ${aiOn&&aiCalls.length>0?`
+        <div class="card mb-16">
+          <div class="card-head"><h3>${ico('mic',14)}AI Receptionist Activity</h3><span class="pill green pill-live"><span class="dot"></span>Active</span></div>
+          ${aiCalls.map(call=>`
+            <div class="section-block" style="cursor:pointer" onclick="viewAICall('${call.id}')">
+              <div class="row-between"><div class="row gap-8"><span class="pill ${call.direction==='outbound'?'orange':'blue'} tiny"><span class="dot"></span>${call.direction}</span><span class="small bold">${call.purpose}</span></div><span class="tiny muted">${call.time}</span></div>
+              <div class="small muted mt-12">${call.summary}</div>
+            </div>
+          `).join('')}
+        </div>
+        `:''}
+        <div class="card">
+          <div class="card-head"><h3>${ico('clock',14)}Activity Timeline</h3></div>
+          ${c.timeline.map(ev=>`<div class="section-block"><div class="row-between"><div class="small">${ev.action}</div><div class="tiny muted">${ev.time}</div></div><div class="tiny mono muted mt-12">${ev.type}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── SCALEHOUSE ──
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderScalehouseTickets(){
+  return `
+  <div class="app-body">
+    <div class="page-head">
+      <div><h1>Tickets</h1><p>Tickets activated today at this scalehouse. Each ticket sends a magic link to the driver's phone and to the destination attendant.</p></div>
+      <div class="page-head-cta"><button class="btn btn-primary" onclick="setTab('newticket')">${ico('plus',14)}Activate ticket</button></div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('receipt',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Tickets Today</div><div class="kpi-val">${SEED.tickets.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('check-circle',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">Delivered</div><div class="kpi-val">${SEED.tickets.filter(t=>t.status==='Delivered').length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon amber">${ico('truck',20,'style="stroke:var(--amber)"')}</div><div><div class="kpi-label">In Transit</div><div class="kpi-val">${SEED.tickets.filter(t=>t.status==='In Transit'||t.status==='Activated').length}</div></div></div>
+    </div>
+
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Ticket</th><th>Truck</th><th>Carrier</th><th>Driver</th><th>Net wt</th><th>Status</th><th>Time</th></tr></thead>
+        <tbody>
+        ${SEED.tickets.map(t=>{
+          const c = carrier(t.carrierId);
+          const d = t.driverId?driver(t.driverId):null;
+          return `<tr onclick="viewTicket('${t.id}')">
+            <td class="mono bold">${t.id}</td>
+            <td><strong>${t.truckId}</strong></td>
+            <td>${c.name}</td>
+            <td>${d?d.name:'<span class="muted">—</span>'}</td>
+            <td>${t.netWeight?t.netWeight+' tons':'<span class="muted">—</span>'}</td>
+            <td><span class="pill ${t.status==='Delivered'?'green':t.status==='In Transit'?'amber pill-live':t.status==='Awaiting Attendant'?'blue pill-live':'orange pill-live'}"><span class="dot"></span>${t.status}</span></td>
+            <td class="tiny muted">${t.createdAt.split(' ')[1]}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function viewTicket(id){STATE.context.viewTicket=id;renderPage()}
+function backFromTicket(){delete STATE.context.viewTicket;renderPage()}
+
+function renderTicketDetail(id){
+  const t = ticket(id);
+  const c = carrier(t.carrierId);
+  const d = t.driverId?driver(t.driverId):null;
+  const l = load(t.loadId);
+  return `
+  <div class="app-body narrow">
+    <div class="row mb-16 gap-16"><button class="btn btn-ghost btn-sm" onclick="backFromTicket()">${ico('arrow-left',14)}Back</button>
+      <div class="serif" style="font-size:24px;font-weight:400">${t.id}</div>
+      <span class="pill ${t.status==='Delivered'?'green':'amber pill-live'}"><span class="dot"></span>${t.status}</span>
+    </div>
+    <div class="card mb-16">
+      <div class="detail-grid">
+        <div><div class="detail-item"><div class="label">Carrier</div><div class="value">${c.name}</div></div>
+          <div class="detail-item"><div class="label">Truck</div><div class="value mono">${t.truckId}</div></div>
+          <div class="detail-item"><div class="label">Driver</div><div class="value">${d?d.name:'—'}</div></div></div>
+        <div><div class="detail-item"><div class="label">Pickup</div><div class="value">${t.pickup}</div></div>
+          <div class="detail-item"><div class="label">Destination</div><div class="value">${t.dest}</div></div>
+          <div class="detail-item"><div class="label">Load ref</div><div class="value mono">${t.loadId}</div></div></div>
+        <div><div class="detail-item"><div class="label">Net weight</div><div class="value">${t.netWeight?t.netWeight+' tons':'Pending'}</div></div>
+          <div class="detail-item"><div class="label">Created</div><div class="value">${t.createdAt}</div></div>
+          <div class="detail-item"><div class="label">Delivered</div><div class="value">${t.deliveredAt||'—'}</div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>Workflow</h3></div>
+      <div class="section-block"><div class="row gap-8">${t.driverSigned?ico('check-circle',16,'style="stroke:var(--green)"'):ico('clock',16,'style="stroke:var(--g3)"')}<div><div class="value" style="font-size:13px">Driver signed</div><div class="small muted">${t.driverSigned?'Confirmed delivery':'Awaiting'}</div></div></div></div>
+      <div class="section-block"><div class="row gap-8">${t.attendantSigned?ico('check-circle',16,'style="stroke:var(--green)"'):ico('clock',16,'style="stroke:var(--g3)"')}<div><div class="value" style="font-size:13px">Attendant verified</div><div class="small muted">${t.attendantSigned?t.attendantName+' · weight confirmed':'Awaiting'}</div></div></div></div>
+      <div class="section-block"><div class="row gap-8">${t.status==='Delivered'?ico('check-circle',16,'style="stroke:var(--green)"'):ico('clock',16,'style="stroke:var(--g3)"')}<div><div class="value" style="font-size:13px">PDF generated</div><div class="small muted">${t.status==='Delivered'?'Bundled into invoice package':'Pending'}</div></div></div></div>
+    </div>
+  </div>`;
+}
+
+function renderScalehouseTrucks(){
+  return `
+  <div class="app-body">
+    <div class="page-head"><div><h1>Trucks</h1><p>Trucks coming through the scale today.</p></div></div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon orange">${ico('truck',20,'style="stroke:var(--orange)"')}</div><div><div class="kpi-label">Daily Truck Count</div><div class="kpi-val">${SEED.trucks.length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon green">${ico('check-circle',20,'style="stroke:var(--green)"')}</div><div><div class="kpi-label">Available Today</div><div class="kpi-val">${SEED.trucks.filter(t=>t.status==='Available').length}</div></div></div>
+      <div class="kpi"><div class="kpi-icon amber">${ico('package',20,'style="stroke:var(--amber)"')}</div><div><div class="kpi-label">Delivering Now</div><div class="kpi-val">${SEED.trucks.filter(t=>t.status==='Delivering').length}</div></div></div>
+    </div>
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Truck ID</th><th>Carrier</th><th>Driver</th><th>Plate</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        ${SEED.trucks.map(t=>{
+          const c=carrier(t.carrierId);
+          const d=t.driverId?driver(t.driverId):null;
+          return `<tr><td><strong>${t.id}</strong></td><td>${c.name}</td><td>${d?d.name:'<span class="muted">Not assigned</span>'}</td><td class="mono small muted">${t.plate}</td><td><span class="pill ${t.status==='Available'?'green':'amber pill-live'}"><span class="dot"></span>${t.status}</span></td><td><button class="btn btn-primary btn-sm" onclick="setTab('newticket')">Activate</button></td></tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderScalehouseNewTicket(){
+  return `
+  <div class="app-body narrow">
+    <div class="page-head"><div><h1>Activate Ticket</h1><p>Generate a new ticket and send the magic link to the driver and destination attendant.</p></div></div>
+    <div class="card">
+      <div class="f-row-3">
+        <div class="f-grp"><label class="f-lbl">Carrier</label><select class="f-sel" id="ntCarrier">${SEED.carriers.filter(c=>c.status==='Active').map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+        <div class="f-grp"><label class="f-lbl">Truck ID</label><input class="f-in" id="ntTruck" value="050"></div>
+        <div class="f-grp"><label class="f-lbl">Driver</label><input class="f-in" id="ntDriver" placeholder="To be defined later" value="To be defined later"></div>
+      </div>
+
+      <div class="f-grp"><label class="f-lbl">Pickup Location *</label><select class="f-sel">${SEED.pickupSites.map(p=>`<option>${p.name}</option>`).join('')}</select></div>
+      <div class="f-grp"><label class="f-lbl">Destination Site *</label><select class="f-sel" id="ntDest">${SEED.destSites.map(p=>`<option>${p.name}</option>`).join('')}</select></div>
+
+      <div class="f-grp"><label class="f-lbl">Transaction ID (Optional)</label><input class="f-in" placeholder="Optional identifier for this ticket"></div>
+
+      <div class="f-grp" style="background:var(--green-dim);border:1px solid var(--green-border);border-radius:7px;padding:12px 14px;color:var(--green);font-weight:600;display:flex;align-items:center;gap:8px">${ico('package',16,'style="stroke:var(--green)"')}Net Weight (tons) *</div>
+      <input class="f-in" placeholder="24.2" id="ntWeight">
+
+      <div class="row gap-8 mt-16">
+        <button class="btn btn-ghost" style="flex:1">${ico('doc',14)}Save</button>
+        <button class="btn btn-blue" style="flex:1" onclick="activateTicket()">${ico('link',14)}Activate & send links</button>
+      </div>
+
+      <div class="card-tight mt-16" style="background:var(--blue-dim);border:1px solid var(--blue-border)">
+        <div class="row gap-8">${ico('mail',14,'style="stroke:var(--blue)"')}<div class="small">When you tap <strong>Activate</strong>, a magic link is texted to the driver's phone and emailed to the destination attendant. Both can open it instantly — no app download.</div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function activateTicket(){
+  const carrierId = $('#ntCarrier').value;
+  const truckId = $('#ntTruck').value;
+  const dest = $('#ntDest').value;
+  const newTicket = {
+    id: 'T-2026-'+Math.floor(Math.random()*9000+1000),
+    loadId: 'LD-58B4A7C2',
+    truckId,
+    driverId: null,
+    carrierId,
+    pickup: 'Primal Materials Pickup Pit',
+    dest,
+    netWeight: 0,
+    status: 'Activated',
+    createdAt: new Date().toISOString().slice(0,16).replace('T',' '),
+    deliveredAt: null,
+    driverSigned: false,
+    attendantSigned: false,
+    attendantName: null,
+    photos: 0
+  };
+  SEED.tickets.unshift(newTicket);
+  showToast('Ticket activated. Magic link sent to driver and to '+dest+' attendant.');
+  setTab('tickets');
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── DESTINATION ATTENDANT ──
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderDestIncoming(){
+  const incoming = SEED.tickets.filter(t=>(t.dest==='Kiewit Site'||t.dest==='2200 Conroe Park, Conroe, TX'||t.dest==='Kiewit')&&(t.status==='Activated'||t.status==='In Transit'||t.status==='Awaiting Attendant'));
+  return `
+  <div class="app-body">
+    <div class="page-head"><div><h1>Incoming Loads</h1><p>Trucks heading your way. Verify weight on arrival and sign off.</p></div></div>
+
+    <div class="card">
+      ${incoming.length===0?'<div class="empty">No incoming trucks right now</div>':`
+      <table class="tbl">
+        <thead><tr><th>Ticket</th><th>Truck</th><th>Carrier</th><th>Driver</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        ${incoming.map(t=>{
+          const c=carrier(t.carrierId); const d=t.driverId?driver(t.driverId):null;
+          return `<tr>
+            <td class="mono bold">${t.id}</td>
+            <td><strong>${t.truckId}</strong></td>
+            <td>${c.name}</td>
+            <td>${d?d.name:'<span class="muted">Unassigned</span>'}</td>
+            <td><span class="pill ${t.status==='Awaiting Attendant'?'orange pill-live':'amber pill-live'}"><span class="dot"></span>${t.status}</span></td>
+            <td>${t.status==='Awaiting Attendant'?`<button class="btn btn-primary btn-sm" onclick="signOffTicket('${t.id}')">${ico('check',12)}Verify & sign</button>`:'<span class="muted small">In transit</span>'}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      `}
+    </div>
+  </div>`;
+}
+
+function signOffTicket(id){
+  const w = prompt('Confirm net weight (tons):', '25.4');
+  if(!w)return;
+  const t = ticket(id);
+  t.netWeight=parseFloat(w);
+  t.attendantSigned=true;
+  t.attendantName='Bobby Mitchell';
+  t.status='Delivered';
+  t.deliveredAt=new Date().toISOString().slice(0,16).replace('T',' ');
+  showToast('Signed off. Ticket complete and PDF generated.');
+  renderPage();
+}
+
+function renderDestReceived(){
+  const received = SEED.tickets.filter(t=>t.status==='Delivered'&&t.attendantName==='Bobby Mitchell');
+  return `
+  <div class="app-body">
+    <div class="page-head"><div><h1>Received Today</h1><p>Tickets you've signed off on. PDF copies are auto-archived.</p></div></div>
+    <div class="card">
+      <table class="tbl">
+        <thead><tr><th>Ticket</th><th>Truck</th><th>Net wt</th><th>Delivered at</th><th></th></tr></thead>
+        <tbody>
+        ${received.map(t=>`<tr><td class="mono bold">${t.id}</td><td><strong>${t.truckId}</strong></td><td>${t.netWeight} tons</td><td>${t.deliveredAt}</td><td><button class="btn btn-ghost btn-sm">${ico('download',12)}PDF</button></td></tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── VENDOR PORTAL ──
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderVendorCompany(){
+  const c = carrier(ROLE_CONFIG.vendor.carrierId);
+  return `<div class="app-body"><div class="page-head"><div><h1>${c.name}</h1><p class="muted">Vendor Profile</p></div></div>${renderCarrierDetail(c.id).replace('<div class="row mb-16 gap-16">','<div class="row mb-16 gap-16" style="display:none">')}</div>`;
+}
+function renderVendorContacts(){
+  const c = carrier(ROLE_CONFIG.vendor.carrierId);
+  return `<div class="app-body"><div class="page-head"><div><h1>Contacts</h1><p>Authorized contacts for ${c.name}.</p></div></div>
+    <div class="card"><table class="tbl"><thead><tr><th>Name</th><th>Title</th><th>Email</th><th>Phone</th></tr></thead><tbody>
+      <tr><td class="bold">${c.primary}</td><td>Owner</td><td>${c.email}</td><td>${c.phone}</td></tr>
+    </tbody></table></div></div>`;
+}
+function renderVendorTrucks(){
+  const cid = ROLE_CONFIG.vendor.carrierId;
+  const trucks = SEED.trucks.filter(t=>t.carrierId===cid);
+  return `<div class="app-body"><div class="page-head"><div><h1>Trucks</h1></div></div>
+    <div class="card">${trucks.length===0?'<div class="empty">No trucks registered</div>':`<table class="tbl"><thead><tr><th>ID</th><th>Plate</th><th>Status</th></tr></thead><tbody>${trucks.map(t=>`<tr><td class="mono bold">${t.id}</td><td>${t.plate}</td><td><span class="pill ${t.status==='Available'?'green':'amber'}"><span class="dot"></span>${t.status}</span></td></tr>`).join('')}</tbody></table>`}</div></div>`;
+}
+function renderVendorDrivers(){
+  const cid = ROLE_CONFIG.vendor.carrierId;
+  const drivers = SEED.drivers.filter(d=>d.carrierId===cid);
+  return `<div class="app-body"><div class="page-head"><div><h1>Drivers</h1></div></div>
+    <div class="card">${drivers.length===0?'<div class="empty">No drivers registered</div>':`<table class="tbl"><thead><tr><th>Name</th><th>CDL</th><th>Status</th></tr></thead><tbody>${drivers.map(d=>`<tr><td class="bold">${d.name}</td><td class="mono small">${d.cdl}</td><td><span class="pill ${d.status==='Active'?'green':'amber'}"><span class="dot"></span>${d.status}</span></td></tr>`).join('')}</tbody></table>`}</div></div>`;
+}
+function renderVendorTickets(){
+  const cid = ROLE_CONFIG.vendor.carrierId;
+  const tickets = SEED.tickets.filter(t=>t.carrierId===cid);
+  return `<div class="app-body"><div class="page-head"><div><h1>Vendor Profile</h1><p class="muted">${carrier(cid).name}</p></div><div class="page-head-cta"><button class="btn btn-ghost">${ico('download',14)}CSV</button></div></div>
+
+    <div class="card">
+      <div class="row gap-8 mb-16">
+        <select class="f-sel" style="max-width:160px"><option>Custom Range</option></select>
+        <select class="f-sel" style="max-width:160px"><option>All Trucks</option></select>
+        <select class="f-sel" style="max-width:160px"><option>All Locations</option></select>
+        <select class="f-sel" style="max-width:160px"><option>All Statuses</option></select>
+      </div>
+      <div class="f-row-2 mb-16">
+        <div class="f-grp"><label class="f-lbl">Start date</label><input class="f-in" type="date" value="2025-11-01"></div>
+        <div class="f-grp"><label class="f-lbl">End date</label><input class="f-in" type="date" value="2025-12-31"></div>
+      </div>
+      <div class="small muted mb-16">Showing ${tickets.length} of ${tickets.length} tickets</div>
+      ${tickets.length===0?`<div class="empty">${ico('doc',32,'style="stroke:var(--g3);opacity:.5"')}<div class="mt-12">No tickets found</div><div class="small muted">Try adjusting your filters to see more results</div></div>`:`<table class="tbl"><thead><tr><th>Ticket</th><th>Truck</th><th>Net wt</th><th>Status</th><th>Delivered</th></tr></thead><tbody>${tickets.map(t=>`<tr><td class="mono bold">${t.id}</td><td><strong>${t.truckId}</strong></td><td>${t.netWeight||'—'}</td><td><span class="pill ${t.status==='Delivered'?'green':'amber'}"><span class="dot"></span>${t.status}</span></td><td>${t.deliveredAt||'—'}</td></tr>`).join('')}</tbody></table>`}
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   ── ADMIN ──
+   ═══════════════════════════════════════════════════════════════════════ */
+function renderAdminCompanies(){
+  return `<div class="app-body">
+    <div class="page-head"><div><h1>Admin Dashboard</h1><p>Manage companies, sites, and onboarding workflows.</p></div><div class="page-head-cta"><button class="btn btn-blue">${ico('plus',14)}Create Company</button></div></div>
+
+    <div class="card">
+      <div class="row gap-8 mb-16">
+        <div class="row" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:7px;padding:8px 12px">${ico('search',14,'style="stroke:var(--g3)"')}<input class="f-in" style="border:none;background:transparent;padding:0" placeholder="Search companies…"></div>
+        <select class="f-sel" style="max-width:130px"><option>All Types</option></select>
+        <select class="f-sel" style="max-width:130px"><option>All Statuses</option></select>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Company Name</th><th>Type</th><th>Status</th><th>Primary Contact</th><th>Email</th><th></th></tr></thead>
+        <tbody>
+        ${SEED.carriers.map(c=>{
+          const statusPill = {'Active':'green','Suspended':'red','Onboarding Submitted':'amber','Onboarding Invited':'amber','Onboarding In Progress':'blue','Draft':'gray'}[c.status]||'gray';
+          return `<tr onclick="viewCarrier('${c.id}')"><td class="bold">${c.name}</td><td><span class="pill gray">Carrier</span></td><td><span class="pill ${statusPill}"><span class="dot"></span>${c.status}</span></td><td>${c.primary}</td><td class="small muted">${c.email}</td><td><button class="btn btn-ghost btn-sm">${ico('eye',12)}View</button></td></tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderAdminCompliance(){
+  return `<div class="app-body">
+    <div class="page-head"><div><h1>Fleet Compliance Management</h1><p>Monitor truck inspections and manage compliance status. Trucks with reported issues are automatically flagged for admin review.</p></div></div>
+
+    <div class="card mb-16">
+      <div class="card-head"><h3>${ico('shield',14)}Truck Restrictions</h3>
+        <div class="row gap-8">
+          <select class="f-sel btn-sm" style="font-size:11px;padding:5px 24px 5px 10px"><option>Restricted Only</option><option>All Trucks</option><option>Approved Override</option></select>
+        </div>
+      </div>
+      <table class="tbl">
+        <thead><tr><th>Truck ID</th><th>Carrier</th><th>License Plate</th><th>VIN</th><th>Inspection Status</th><th>Issues</th><th>Compliance Status</th><th>Last Inspection</th><th>Admin Notes</th><th>Actions</th></tr></thead>
+        <tbody>
+        ${SEED.truckCompliance.map(t=>`
+          <tr onclick="viewTruckCompliance('${t.truckId}')">
+            <td class="bold">${t.truckId}</td>
+            <td class="small">${t.carrierName}</td>
+            <td class="mono small">${t.plate}</td>
+            <td class="mono small">${t.vin}</td>
+            <td><span class="row gap-8" style="color:var(--red)">${ico('x',12)}<span class="small">${t.issues} Issue${t.issues>1?'s':''}</span></span></td>
+            <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();viewTruckCompliance('${t.truckId}')">${ico('eye',12)}View</button></td>
+            <td><span class="pill red"><span class="dot"></span>${t.status}</span></td>
+            <td class="small muted">${t.lastInspection}</td>
+            <td class="small">${t.adminNotes||'—'}</td>
+            <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editTruckCompliance('${t.truckId}')">${ico('edit',12)}Edit</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>${ico('clock',14)}Document Expirations</h3></div>
+      <table class="tbl">
+        <thead><tr><th>Carrier</th><th>Document</th><th>Days left</th><th>Severity</th><th></th></tr></thead>
+        <tbody>${SEED.expirations.map(e=>{const c=carrier(e.carrierId);return `<tr><td class="bold">${c.name}</td><td>${e.type}</td><td class="bold">${e.daysLeft}</td><td><span class="pill ${e.severity}"><span class="dot"></span>${e.severity==='red'?'Critical':e.severity==='amber'?'Warning':'OK'}</span></td><td><button class="btn btn-ghost btn-sm">${ico('mail',12)}Notify carrier</button></td></tr>`}).join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function viewTruckCompliance(truckId){
+  const t = SEED.truckCompliance.find(x=>x.truckId===truckId);
+  if(!t)return;
+  openModal(`
+    <h2>Truck ${t.truckId} · Compliance Issues</h2>
+    <div class="modal-sub">${t.carrierName} · ${t.lastInspection}</div>
+    <div class="card-tight mb-12" style="background:var(--red-dim);border:1px solid var(--red-border)">
+      <div class="row gap-8">${ico('x',16,'style="stroke:var(--red)"')}<div><strong>${t.status}</strong> — Dispatch is locked until admin approves override or carrier resolves issues.</div></div>
+    </div>
+    <div class="label mb-8">Reported Issues</div>
+    ${t.issueDetails.map(d=>`
+      <div class="card-tight mb-12" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08)">
+        <div class="row-between mb-8"><div class="bold">${d.section} · ${d.item}</div><span class="pill ${d.severity==='Critical'?'red':d.severity==='Major'?'amber':'gray'}">${d.severity}</span></div>
+        <div class="small muted">${d.note}</div>
+      </div>
+    `).join('')}
+    <div class="label mt-16 mb-8">Admin Notes</div>
+    <textarea class="f-ta" id="cmplNotes" placeholder="Add notes about resolution or override reason…">${t.adminNotes}</textarea>
+    <div class="row gap-8 mt-16">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-success" style="flex:1" onclick="approveOverride('${t.truckId}')">${ico('check',12)}Approve override</button>
+      <button class="btn btn-danger" style="flex:1" onclick="closeModal()">Keep restricted</button>
+    </div>
+  `);
+}
+
+function editTruckCompliance(truckId){viewTruckCompliance(truckId)}
+
+function approveOverride(truckId){
+  const idx = SEED.truckCompliance.findIndex(t=>t.truckId===truckId);
+  if(idx<0)return;
+  const notes = $('#cmplNotes')?.value||'Approved by admin';
+  SEED.truckCompliance[idx].status = 'Approved Override';
+  SEED.truckCompliance[idx].adminNotes = notes;
+  showToast(`Truck ${truckId} approved. Carrier and driver notified.`);
+  closeModal();
+  renderPage();
+}
+
+function renderAdminPickup(){
+  return `<div class="app-body"><div class="page-head"><div><h1>Pickup Locations</h1></div><div class="page-head-cta"><button class="btn btn-blue">${ico('plus',14)}Add location</button></div></div>
+    <div class="card"><table class="tbl"><thead><tr><th>Name</th><th>Address</th></tr></thead><tbody>${SEED.pickupSites.map(p=>`<tr><td class="bold">${p.name}</td><td class="muted">${p.address}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+function renderAdminDest(){
+  return `<div class="app-body"><div class="page-head"><div><h1>Destination Sites</h1></div><div class="page-head-cta"><button class="btn btn-blue">${ico('plus',14)}Add site</button></div></div>
+    <div class="card"><table class="tbl"><thead><tr><th>Name</th><th>Address</th><th>Attendant</th></tr></thead><tbody>${SEED.destSites.map(p=>`<tr><td class="bold">${p.name}</td><td class="muted">${p.address}</td><td>${p.attendant}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+function renderAdminBidding(){
+  return `<div class="app-body"><div class="page-head"><div><h1>Bidding Rules</h1><p>Default bidding behavior and auto-invitation rules across the platform.</p></div></div>
+    <div class="card mb-16">
+      <div class="card-head"><h3>Default invitation rules</h3></div>
+      <div class="row-between mb-12"><div><div class="value">Auto-invite carriers matching equipment + lane</div><div class="small muted">Match by truck type, capacity, and historical lane</div></div><div class="toggle on"></div></div>
+      <div class="row-between mb-12"><div><div class="value">Require minimum safety score</div><div class="small muted">Currently set to 80</div></div><div class="toggle on"></div></div>
+      <div class="row-between mb-12"><div><div class="value">Block carriers with expired insurance</div><div class="small muted">Suspends bid invitations until renewal</div></div><div class="toggle on"></div></div>
+      <div class="row-between"><div><div class="value">Allow Set Rate mode</div><div class="small muted">Shippers can pre-set load rates</div></div><div class="toggle on"></div></div>
+    </div>
+  </div>`;
+}
+
+function renderAdminModules(){
+  const p = SEED.workspace.pricing;
+  return `<div class="app-body narrow">
+    <div class="page-head"><div><h1>Module Toggles & Pricing</h1><p>Per-workspace module configuration. As Platform Admin, you can override pricing or comp modules for any workspace.</p></div></div>
+
+    <div class="card mb-16">
+      <div class="card-head"><h3>${ico('receipt',14)}Pricing model</h3></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div class="card-tight" style="background:rgba(16,185,129,0.06);border:1px solid var(--green-border)">
+          <div class="label" style="color:var(--green)">1. Base Platform Fee</div>
+          <div class="value lg">${money(p.basePlatformFee)} <span class="small muted">/ mo</span></div>
+          <div class="tiny muted mt-12">Includes Carrier Onboarding, E-Ticketing, Bid Board, Analytics, magic-link drivers</div>
+        </div>
+        <div class="card-tight" style="background:rgba(59,130,246,0.06);border:1px solid var(--blue-border)">
+          <div class="label" style="color:var(--blue)">2. Per-Load Fee</div>
+          <div class="value lg">$${p.perLoadFee} <span class="small muted">/ load</span></div>
+          <div class="tiny muted mt-12">Flat — same for $500 or $5,000 loads. Covers ticket, magic link, PDF, audit trail.</div>
+        </div>
+        <div class="card-tight" style="background:rgba(249,115,22,0.06);border:1px solid var(--orange-border)">
+          <div class="label" style="color:var(--orange)">3. Modular Add-ons</div>
+          <div class="value lg">Per module</div>
+          <div class="tiny muted mt-12">Driver Onboarding, Compliance Guard, AI Receptionist, CashFlow Accelerator</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-head"><h3>Workspace · ${SEED.workspace.name}</h3><span class="pill orange">${SEED.workspace.tier}</span></div>
+      ${renderModuleList(true)}
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h3>${ico('shield',14)} About module toggles</h3></div>
+      <div class="small muted">Module toggles control what each workspace sees in their navigation, what data they can access, and what they're billed for.<br><br><strong>Architecture:</strong> Each workspace has a <code>workspace_modules</code> table mapping module → enabled (bool) → enabled_at → enabled_by → price_override (optional). The frontend conditionally renders nav and routes. Disabled modules <em>hide</em> data, they don't delete it — re-enabling restores access. Per-load fees calculate from ticket count at end of month.</div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════════════════════ */
+// no auto-init; user clicks role to enter
+</script>
+</body>
+</html>
