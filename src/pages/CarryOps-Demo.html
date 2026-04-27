@@ -45,6 +45,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .role-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:1100px;width:100%}
 .role-card{background:var(--navy3);border:1px solid rgba(255,255,255,0.08);border-radius:var(--r3);padding:22px;cursor:pointer;transition:all .2s;position:relative;text-align:left}
 .role-card:hover{border-color:var(--orange);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.3)}
+.role-card.inactive{cursor:not-allowed;opacity:.54;filter:saturate(.45);background:linear-gradient(135deg,rgba(22,32,50,.72),rgba(17,25,39,.86));border-color:rgba(148,163,184,.14)}
+.role-card.inactive:hover{border-color:rgba(148,163,184,.14);transform:none;box-shadow:none}
+.role-card.inactive .role-card-icon{background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.14)}
+.role-card.inactive .role-card-icon svg{stroke:var(--g3)!important}
+.role-card.inactive .role-card-name{color:var(--g2)}
+.role-card.inactive .role-card-as{color:var(--amber)}
 .role-card-icon{width:42px;height:42px;border-radius:10px;background:var(--orange-dim);border:1px solid var(--orange-border);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
 .role-card-name{font-size:16px;font-weight:600;margin-bottom:6px}
 .role-card-desc{font-size:12px;color:var(--g2);line-height:1.6}
@@ -52,6 +58,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .role-card-tag{position:absolute;top:14px;right:14px;font-size:9px;font-weight:600;padding:3px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:.05em}
 .role-card-tag.new{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,0.3)}
 .role-card-tag.future{background:var(--amber-dim);color:var(--amber);border:1px solid var(--amber-border)}
+.role-card-tag.unavailable{background:rgba(148,163,184,.1);color:var(--g2);border:1px solid rgba(148,163,184,.18)}
 
 .demo-meta{margin-top:48px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:center;font-size:11px;color:var(--g3)}
 .demo-meta-tag{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;padding:4px 10px}
@@ -329,12 +336,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="role-card-desc">Employed driver. Full compliance tracked. Start shift, pre-trip inspection, then run loads.</div>
       <div class="role-card-as">Login as: Marco Garcia · CDL on file</div>
     </div>
-    <div class="role-card" onclick="openAppRoute('/driver/login')">
+    <div class="role-card inactive" aria-disabled="true" title="Unavailable preview">
       <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-link"/></svg></div>
       <div class="role-card-name">Driver — Magic Link Only</div>
       <div class="role-card-desc">Third-party driver hired by a carrier. Just got a text. Tap link, follow route, sign.</div>
-      <div class="role-card-as">Login as: Pete Kowalski · Bayou Belly Dumps</div>
-      <div class="role-card-tag new">Compare</div>
+      <div class="role-card-as">Unavailable preview</div>
+      <div class="role-card-tag unavailable">Unavailable</div>
     </div>
     <div class="role-card" onclick="openAppRoute('/scale-house')">
       <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-warehouse"/></svg></div>
@@ -348,17 +355,19 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="role-card-desc">Receive ticket links from active loads. Verify weight. Sign off on delivery.</div>
       <div class="role-card-as">Login as: Kiewit Site Attendant</div>
     </div>
-    <div class="role-card" onclick="openAppRoute('/vendor/login')">
+    <div class="role-card inactive" aria-disabled="true" title="Unavailable preview">
       <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-receipt"/></svg></div>
       <div class="role-card-name">Vendor Portal (Carrier-side)</div>
       <div class="role-card-desc">Carrier's own profile, ticket history, fleet, drivers, CSV export.</div>
-      <div class="role-card-as">Login as: 4HR Trucking</div>
+      <div class="role-card-as">Unavailable preview</div>
+      <div class="role-card-tag unavailable">Unavailable</div>
     </div>
-    <div class="role-card" onclick="openAppRoute('/admin/dashboard')">
+    <div class="role-card inactive" aria-disabled="true" title="Unavailable preview">
       <div class="role-card-icon"><svg class="ico" width="22" height="22" style="stroke:var(--orange)"><use href="#i-cog"/></svg></div>
       <div class="role-card-name">Platform Admin</div>
       <div class="role-card-desc">Manage carrier companies, fleet compliance, sites, bidding rules. Module toggles per workspace.</div>
-      <div class="role-card-as">Login as: Platform Admin</div>
+      <div class="role-card-as">Unavailable preview</div>
+      <div class="role-card-tag unavailable">Unavailable</div>
     </div>
   </div>
 
