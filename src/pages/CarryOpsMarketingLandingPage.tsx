@@ -6,7 +6,7 @@ const CarryOpsMarketingLandingPage = () => {
       title="Carry Ops Marketing Landing"
       srcDoc={carryOpsMarketingLandingHtml}
       className="h-screen w-full border-0"
-      sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
+      sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation allow-popups allow-popups-to-escape-sandbox"
     />
   );
 };
