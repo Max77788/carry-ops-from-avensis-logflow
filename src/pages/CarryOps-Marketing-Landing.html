@@ -3,12 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Carry Ops</title>
-<meta name="description" content="Carry Ops">
-<meta property="og:title" content="Carry Ops">
-<meta property="og:description" content="Carry Ops">
-<meta name="twitter:title" content="Carry Ops">
-<meta name="twitter:description" content="Carry Ops">
+<title>Carry Ops — Load Control for Modern Trucking Operations</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -441,6 +436,7 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
   </a>
   <div class="nav-links">
     <a href="#how" class="nav-link">How It Works</a>
+    <a href="https://carry-ops-app.vercel.app/routing" target="_blank" rel="noopener" class="nav-link">Live Demo ↗</a>
     <a href="#bidboard" class="nav-link">Bid Board</a>
     <a href="#modules" class="nav-link">Modules</a>
     <a href="#pricing" class="nav-link">Pricing</a>
@@ -465,7 +461,7 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
     <p class="hero-sub">Less paper. More loads. Faster pay. One platform that brings your carriers, drivers, tickets, compliance, and billing into a single system you actually trust.</p>
     <div class="hero-cta-row">
       <button class="btn-hero btn-hero-primary" onclick="scrollToDemo()">Book a 15-Minute Call →</button>
-      <button class="btn-hero btn-hero-ghost" onclick="document.getElementById('how').scrollIntoView({behavior:'smooth'})">See How It Works</button>
+      <a class="btn-hero btn-hero-ghost" href="https://carry-ops-app.vercel.app/routing" target="_blank" rel="noopener">Open Live Carry Ops Demo ↗</a>
     </div>
     <div class="hero-proof">
       <div class="proof-item">
@@ -579,7 +575,7 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
           <div class="how-screen-body">
 
             <div class="screen-panel active" id="sp-0">
-              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Onboarding · Lone Star Hauling LLC</div>
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Onboarding · Ironwood Bulk Transport LLC</div>
               <div class="mini-row"><span class="mini-label">Insurance certificate</span><span class="mini-badge green">✓ Active</span></div>
               <div class="mini-row"><span class="mini-label">W-9 on file</span><span class="mini-badge green">✓ Verified</span></div>
               <div class="mini-row"><span class="mini-label">DOT number</span><span class="mini-badge green">✓ Active</span></div>
@@ -609,13 +605,13 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
             </div>
 
             <div class="screen-panel" id="sp-3">
-              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Award Decision · Lone Star Hauling</div>
+              <div style="font-size:11px;color:var(--g3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Award Decision · Ironwood Bulk Transport</div>
               <div class="mini-row"><span class="mini-label">Bid</span><span class="mini-val">$11.40 / ton</span></div>
               <div class="mini-row"><span class="mini-label">Safety score</span><span class="mini-val green">98 / 100</span></div>
               <div class="mini-row"><span class="mini-label">On-time history</span><span class="mini-val green">98%</span></div>
               <div class="mini-row"><span class="mini-label">Disputes (12mo)</span><span class="mini-val green">0</span></div>
               <div class="mini-row"><span class="mini-label">Consistency</span><span class="mini-val green">★★★★★</span></div>
-              <div style="margin-top:12px;padding:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;font-size:11px;color:var(--green);text-align:center">✓ Award Load to Lone Star Hauling</div>
+              <div style="margin-top:12px;padding:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:6px;font-size:11px;color:var(--green);text-align:center">✓ Award Load to Ironwood Bulk Transport</div>
             </div>
 
             <div class="screen-panel" id="sp-4">
@@ -720,28 +716,28 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
             <div class="bidmock-bids-label" style="display:flex;align-items:center;gap:6px"><svg class="ico ico-orange" width="11" height="11" style="stroke:var(--g3)"><use href="#i-lock"/></svg>Bids visible only to you</div>
             <div class="bid-row winner">
               <div class="bid-carrier">
-                <div class="bid-name">Lone Star Hauling <span class="bid-badge">Top Match</span></div>
+                <div class="bid-name">Ironwood Bulk Transport <span class="bid-badge">Top Match</span></div>
                 <div class="bid-stars"><span class="gold">★★★★★</span> · 98% on-time · 0 disputes</div>
               </div>
               <div class="bid-amount winner-amt">$ 11.40 / ton</div>
             </div>
             <div class="bid-row">
               <div class="bid-carrier">
-                <div class="bid-name">Bayou Belly Dumps</div>
+                <div class="bid-name">Delta Belly Dumps LLC</div>
                 <div class="bid-stars"><span class="gold">★★★★</span>★ · 94% on-time · 1 dispute</div>
               </div>
               <div class="bid-amount">$ 11.10 / ton</div>
             </div>
             <div class="bid-row">
               <div class="bid-carrier">
-                <div class="bid-name">Coastal Aggregate Co.</div>
+                <div class="bid-name">Gulfline Aggregate Co.</div>
                 <div class="bid-stars"><span class="gold">★★★★</span>★ · 91% on-time · 2 disputes</div>
               </div>
               <div class="bid-amount">$ 10.85 / ton</div>
             </div>
             <div class="bid-row">
               <div class="bid-carrier">
-                <div class="bid-name">Rio Grande Carriers</div>
+                <div class="bid-name">Frontera Carriers LLC</div>
                 <div class="bid-stars"><span class="gold">★★★</span>★★ · 88% on-time · 3 disputes</div>
               </div>
               <div class="bid-amount">$ 10.50 / ton</div>
@@ -800,7 +796,7 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
       <div class="feat-card">
         <div class="feat-icon-wrap"><svg class="ico ico-orange" width="22" height="22"><use href="#i-receipt"/></svg></div>
         <div class="feat-title">CashFlow Accelerator <span class="feat-status-pill req">Bank Tie-In</span></div>
-        <div class="feat-desc">POD-to-invoice automation. Auto-built billing packages, AR reminders, days-to-pay tracking. Optional bank integration (PNC and others) accelerates collections — enabled on request.</div>
+        <div class="feat-desc">POD-to-invoice automation. Auto-built billing packages, AR reminders, days-to-pay tracking. Optional bank integration (major commercial banks) accelerates collections — enabled on request.</div>
         <div class="feat-tag">Available on request</div>
       </div>
       <div class="feat-card">
@@ -1312,7 +1308,7 @@ footer{background:var(--navy);padding:60px 5% 30px;border-top:1px solid rgba(255
       </div>
       <div class="faq-item" onclick="this.classList.toggle('open')">
         <div class="faq-q">What about the bank integration? <span class="faq-toggle">+</span></div>
-        <div class="faq-a">CashFlow Accelerator includes optional bank tie-in (PNC and others) that's enabled on shipper request. It accelerates collections by automating the POD-to-invoice-to-deposit flow. Available on the Enterprise tier and as an add-on.</div>
+        <div class="faq-a">CashFlow Accelerator includes optional bank tie-in (major commercial banks) that's enabled on shipper request. It accelerates collections by automating the POD-to-invoice-to-deposit flow. Available on the Enterprise tier and as an add-on.</div>
       </div>
       <div class="faq-item" onclick="this.classList.toggle('open')">
         <div class="faq-q">Do you charge per load or per revenue? <span class="faq-toggle">+</span></div>
